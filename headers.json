@@ -1,0 +1,10 @@
+{
+    "authority": "pennydreadfulmagic.com",
+    "accept": "application/json, text/plain, */*",
+    "accept-language": "en-GB,en;q=0.8",
+    "dnt": "1",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "sec-gpc": "1"
+}

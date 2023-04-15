@@ -1,0 +1,106 @@
+{
+    "id": {
+        "dtype": "int64"
+    },
+    "name": {
+        "dtype": "string"
+    },
+    "maindeck": {
+        "comment": "deck in format {'n':int, 'name':str}",
+        "dtype": "object"
+    },
+    "sideboard": {
+        "comment": "deck in format {'n':int, 'name':str}",
+        "dtype": "object"
+    },
+    "colorHasW": {
+        "dtype": "bool"
+    },
+    "colorHasU": {
+        "dtype": "bool"
+    },
+    "colorHasB": {
+        "dtype": "bool"
+    },
+    "colorHasR": {
+        "dtype": "bool"
+    },
+    "colorHasG": {
+        "dtype": "bool"
+    },
+    "colorHasC": {
+        "dtype": "bool"
+    },
+    "colorHasS": {
+        "dtype": "bool"
+    },
+    "createdDatetime": {
+        "dtype": "datetime64[ns]"
+    },
+    "createdDate": {
+        "dtype": "int32"
+    },
+    "updatedDatetime": {
+        "dtype": "datetime64[ns]"
+    },
+    "updatedDate": {
+        "dtype": "int32"
+    },
+    "person": {
+        "dtype": "string"
+    },
+    "personId": {
+        "dtype": "int16"
+    },
+    "seasonId": {
+        "dtype": "int8"
+    },
+    "sourceName": {
+        "comment": "where the decks is found, either League or Gatherling",
+        "dtype": "category",
+        "categories": ["League", "Gatherling"]
+    },
+    "url": {
+        "comment": "where to find the deck",
+        "dtype": "string"
+    },
+    "archetypeId": {
+        "comment": "can't use Int16 since it's a partition column",
+        "dtype": "int16"
+    },
+    "archetypeName": {
+        "dtype": "category"
+    },
+    "competitionId": {
+        "comment": "id of competition",
+        "dtype": "int16"
+    },
+    "finish": {
+        "comment": "finished position for competition, null for leagues",
+        "dtype": "Int8"
+    },
+    "retired": {
+        "comment": "whether a deck is retired from a league, False for gatherling",
+        "dtype": "bool"
+    },
+    "wins": {
+        "comment": "number of deck wins",
+        "dtype": "int8"
+    },
+    "losses": {
+        "comment": "number of deck losses",
+        "dtype": "int8"
+    },
+    "draws": {
+        "comment": "number of deck draws",
+        "dtype": "int8"
+    },
+    "matches": {
+        "comment": "number of deck matches completed",
+        "dtype": "int8"
+    },
+    "omwPercent": {
+        "comment": "opponent match win percent",
+        "dtype": "Int8"
+    }
+}

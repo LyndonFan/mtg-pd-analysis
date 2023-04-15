@@ -1,0 +1,21 @@
+id,originalName,createdDate,updatedDate,wins,losses,draws,finish,archetypeId,sourceUrl,competitionId,competitionName,competitionEndDate,competitionTopN,competitionTypeName,identifier,person,personId,banned,discordId,decklistHash,retired,reviewed,sourceName,archetypeName,name,colors,coloredSymbols,colorSort,legalFormats,omw,seasonId,activeDate,sorted,maindeck,sideboard,canDraw,top8Safe,starsSafe,colorsSafe,personUrl,dateSort,displayDate,showRecord,competitionUrl,url,exportUrl,cmcChartUrl,sourceIsExternal,compRowLen,hasLegalFormat,pdLegal,nonPdLegalFormats,legalIcons,decklist,averageCmc
+208411,Soul Sisters,1676462207,1676463693,0,1,0,,,https://pennydreadfulmagic.com/competitions/4175/,4175,League January 2023,1676620799,8,League,"[""goppyshlephole"", 4175, ""1676462207""]",goppyshlephole,10273,0,580889445738217477,13b1e42f6e1e86f33a0dba8d7d9319125432639e,1,0,League,,Soul Sisters,"['R', 'W']","['W', 'W', 'W', 'R', 'R', 'W', 'W', 'W', 'W', 'R', 'W', 'W', 'W', 'W']",292,"['Duel', 'Penny Dreadful BRO', 'Modern', 'Vintage', 'Legacy']",67%,27,1676463492,True,"[{'n': 4, 'name': 'Champion of the Parish'}, {'n': 4, 'name': 'Doomed Traveler'}, {'n': 3, 'name': 'Norin the Wary'}, {'n': 4, 'name': 'Serra Ascendant'}, {'n': 4, 'name': 'Soul Warden'}, {'n': 4, 'name': ""Soul's Attendant""}, {'n': 4, 'name': 'Unlucky Witness'}, {'n': 4, 'name': 'Ranger of Eos'}, {'n': 4, 'name': 'Goblin Bombardment'}, {'n': 4, 'name': 'Abiding Grace'}, {'n': 4, 'name': 'Battlefield Forge'}, {'n': 4, 'name': 'Clifftop Retreat'}, {'n': 11, 'name': 'Plains'}, {'n': 2, 'name': 'Secluded Courtyard'}]","[{'n': 4, 'name': 'Heap Doll'}, {'n': 2, 'name': 'Kami of False Hope'}, {'n': 3, 'name': 'Sorcerous Spyglass'}, {'n': 4, 'name': 'Forsake the Worldly'}, {'n': 2, 'name': 'Wrath of God'}]",False,,,"<span class=""mana mana-R"" style=""width: 0.6214285714285714rem""></span><span class=""mana mana-W"" style=""width: 2.2785714285714285rem""></span>",/people/id/10273/,1676463492,58 minutes ago,1,/competitions/4175/,/decks/208411/,/export/208411/,/charts/cmc/208411-cmc.png,False,46,True,True,"['Vintage', 'Modern', 'Duel', 'Legacy']","<a href=""/seasons/27/""><i class=""ss ss-bro ss-rare ss-grad"">S27</i></a>","4 Champion of the Parish
+4 Doomed Traveler
+3 Norin the Wary
+4 Serra Ascendant
+4 Soul Warden
+4 Soul's Attendant
+4 Unlucky Witness
+4 Ranger of Eos
+4 Goblin Bombardment
+4 Abiding Grace
+4 Battlefield Forge
+4 Clifftop Retreat
+11 Plains
+2 Secluded Courtyard
+
+4 Heap Doll
+2 Kami of False Hope
+3 Sorcerous Spyglass
+4 Forsake the Worldly
+2 Wrath of God",1.62
