@@ -59,12 +59,13 @@ class ArchetypeDeckAggregator(Aggregator):
         """
         values = []
         # use loop instead since sort_values over entire df is very slow
-        for gp, _df in df.groupby(GROUPBY_COLUMNS):
+        for gp, _df in df.groupby(GROUPBY_COLUMNS, observed=True, sort=False):
             _df = _df.groupby("card")["weight"].sum().reset_index()
             _df["card"] = _df["card"].str.replace(" [0-9]+$","",regex=True)
             _df = _df.sort_values(by="weight", ascending=False)
             cards_vc = _df["card"][:total].value_counts().reset_index()
-            cards_ls = cards_vc.rename(columns={'index':'name',0:'n'}).to_dict(orient='records')
+            cards_vc.columns = ['name', 'n']
+            cards_ls = cards_vc.to_dict(orient='records')
             values.append([*gp, cards_ls])
         res_df = pd.DataFrame(values, columns=GROUPBY_COLUMNS+["card"])
         return res_df
@@ -72,7 +73,7 @@ class ArchetypeDeckAggregator(Aggregator):
 
     def execute(self, df: pd.DataFrame) -> pd.DataFrame:
         df = self._preprocess(df)
-        counts = df.groupby(GROUPBY_COLUMNS).size().reset_index()
+        counts = df.groupby(GROUPBY_COLUMNS, observed=True).size().reset_index()
         counts = counts.rename({0: "decks"}, axis=1)
         df["weight"] = self.strategy.weight_function(df)
         dfs = []
