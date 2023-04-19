@@ -43,7 +43,7 @@ class ArchetypeDeckAggregator(Aggregator):
         return [f"{r['name']} {i:02}" for r in deck for i in range(r['n'])]
     
     @staticmethod
-    def aggregate_cards(df_: pd.DataFrame, total: int) -> pd.DataFrame:
+    def aggregate_cards(df: pd.DataFrame, total: int) -> pd.DataFrame:
         """
         Given a dataframe of weights and cards,
         returns a list of `total` cards with highest weights
@@ -57,27 +57,34 @@ class ArchetypeDeckAggregator(Aggregator):
             pd.DataFrame: dataframe with GROUPBY_COLUMNS, and "card",
             which contains `total` cards of the highest weights
         """
-        df = df_.copy()
-        df = df.groupby(GROUPBY_COLUMNS+["card"])["weight"].sum().reset_index()
-        df["card"] = df["card"].str.replace(" [0-9]+$","")
-        df = df.sort_values(by=["weight"], ascending=False)
-        df = df.groupby(GROUPBY_COLUMNS)["card"].agg(list).map(lambda xs: xs[:total])
-        df = df.reset_index().sort_values(GROUPBY_COLUMNS, ascending=True)
-        return df
+        values = []
+        # use loop instead since sort_values over entire df is very slow
+        for gp, _df in df.groupby(GROUPBY_COLUMNS):
+            _df = _df.groupby("card")["weight"].sum().reset_index()
+            _df["card"] = _df["card"].str.replace(" [0-9]+$","",regex=True)
+            _df = _df.sort_values(by="weight", ascending=False)
+            cards_vc = _df["card"][:total].value_counts().reset_index()
+            cards_ls = cards_vc.rename(columns={'index':'name',0:'n'}).to_dict(orient='records')
+            values.append([*gp, cards_ls])
+        res_df = pd.DataFrame(values, columns=GROUPBY_COLUMNS+["card"])
+        return res_df
         
 
     def execute(self, df: pd.DataFrame) -> pd.DataFrame:
         df = self._preprocess(df)
+        counts = df.groupby(GROUPBY_COLUMNS).size().reset_index()
+        counts = counts.rename({0: "decks"}, axis=1)
         df["weight"] = self.strategy.weight_function(df)
-        new_dfs = {}
+        dfs = []
         for col, n in [("maindeck", 60), ("sideboard", 15)]:
             df[col] = df[col].map(self.expand_cards)
             temp_df = df[GROUPBY_COLUMNS + [col, "weight"]].rename(columns={col: "card"})
             temp_df = temp_df.explode("card")
             temp_df = self.aggregate_cards(temp_df, n)
-            new_dfs[col] = temp_df.rename(columns={"card": col})
-        df = new_dfs["maindeck"].merge(new_dfs["sideboard"], on=GROUPBY_COLUMNS, how="outer")
-        df = df[GROUPBY_COLUMNS + ["maindeck", "sideboard"]]
+            dfs.append(temp_df.rename(columns={"card": col}))
+        df = dfs[0].merge(dfs[1], on=GROUPBY_COLUMNS, how="outer")
+        df = df.merge(counts, on=GROUPBY_COLUMNS, how="outer")
+        df = df[GROUPBY_COLUMNS + ["decks", "maindeck", "sideboard"]]
         return df
 
 class AverageStrategy(Strategy):
