@@ -6,7 +6,7 @@ from typing import List
 
 @dataclass
 class Aggregator:
-    source_columns: List[str] = field(default_factory=list)
+    source_columns: List[str]
 
     def _preprocess(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df[self.source_columns].copy()

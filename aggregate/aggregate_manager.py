@@ -25,6 +25,7 @@ class AggregateManager:
         return wrapped
 
     def execute(self, df: pd.DataFrame):
+        logging.info(f"Found {len(self.aggregators)} registered aggregators")
         for name, agg_class in self.aggregators.items():
             logging.info(f"Aggregating df with {name} aggregator")
             agg_df = agg_class().execute(df)
