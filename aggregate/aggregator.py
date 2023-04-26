@@ -6,6 +6,7 @@ from typing import List
 
 @dataclass
 class Aggregator:
+    groupby_columns: List[str]
     source_columns: List[str]
 
     def _preprocess(self, df: pd.DataFrame) -> pd.DataFrame:

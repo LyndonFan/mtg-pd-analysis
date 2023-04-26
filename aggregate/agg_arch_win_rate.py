@@ -9,28 +9,26 @@ from .aggregate_manager import AggregateManager
 @AggregateManager.register("archetype_win_rate")
 class ArchetypeWinRateAggregator(Aggregator):
     def __init__(self) -> None:
-        super().__init__(
-            [
-                "seasonId",
-                "sourceName",
-                "personId",
-                "wins",
-                "matches",
-                "archetypeId",
-                "archetypeName",
-            ]
-        )
-
-    def execute(self, df: pd.DataFrame) -> pd.DataFrame:
-        df = self._preprocess(df)
-        df = df[df["matches"] > 2].copy()
         groupby_cols = [
             "seasonId",
             "sourceName",
             "archetypeId",
             "archetypeName",
         ]
-        df = df.groupby(groupby_cols, observed=True, as_index=False).agg(
+        extra_columns = [
+            "personId",
+            "wins",
+            "matches"
+        ]
+        super().__init__(
+            groupby_cols,
+            groupby_cols+extra_columns
+        )
+
+    def execute(self, df: pd.DataFrame) -> pd.DataFrame:
+        df = self._preprocess(df)
+        df = df[df["matches"] > 2].copy()
+        df = df.groupby(self.groupby_columns, observed=True, as_index=False).agg(
             players=pd.NamedAgg("personId", "nunique"),
             decks=pd.NamedAgg("wins", "count"),
             wins=pd.NamedAgg("wins", "sum"),

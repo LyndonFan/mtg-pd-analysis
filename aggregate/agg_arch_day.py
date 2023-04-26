@@ -8,8 +8,8 @@ from .aggregate_manager import AggregateManager
 
 GROUPBY_COLUMNS = [
     "seasonId",
-    "date",
     "sourceName",
+    "date",
     "archetypeId",
     "archetypeName",
 ]
@@ -17,9 +17,10 @@ GROUPBY_COLUMNS = [
 @AggregateManager.register("archetype_day")
 class ArchetypeDayAggregator(Aggregator):
     def __init__(self) -> None:
+        # note "date" isn't a column in input df!
         super().__init__(
-            groupby_columns=GROUPBY_COLS,
-            source_columns=[
+            GROUPBY_COLUMNS,
+            [
                 "seasonId",
                 "personId",
                 "sourceName",

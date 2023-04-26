@@ -35,6 +35,7 @@ class ArchetypeDeckAggregator(Aggregator):
             if c not in extra_columns:
                 extra_columns.append(c)
         super().__init__(
+            GROUPBY_COLUMNS,
             GROUPBY_COLUMNS + extra_columns
         )
     

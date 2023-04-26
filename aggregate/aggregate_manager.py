@@ -28,5 +28,6 @@ class AggregateManager:
         logging.info(f"Found {len(self.aggregators)} registered aggregators")
         for name, agg_class in self.aggregators.items():
             logging.info(f"Aggregating df with {name} aggregator")
-            agg_df = agg_class().execute(df)
-            self.writer.execute(agg_df, name + ".parquet")
+            aggregator = agg_class()
+            agg_df = aggregator.execute(df)
+            self.writer.execute(agg_df, name + ".parquet", aggregator.groupby_columns)

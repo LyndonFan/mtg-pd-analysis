@@ -17,6 +17,7 @@ class ArchetypeCardsAggregator(Aggregator):
         extra_columns = ["matches", "wins"]
         extra_columns.append(column)
         super().__init__(
+            GROUPBY_COLUMNS,
             GROUPBY_COLUMNS + extra_columns
         )
 
