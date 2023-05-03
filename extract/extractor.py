@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, Any
-import pandas as pd
+from typing import Dict, Any, List
 import logging
 
 from .paginator import Paginator
@@ -22,7 +21,7 @@ class Extractor:
             params=self.params,
         )
 
-    def execute(self) -> pd.DataFrame:
+    def execute(self) -> List:
         logging.info(
             f"Start fetching data from {self.url} with {self.page_size=} and paras"
         )
@@ -32,5 +31,4 @@ class Extractor:
             objects.extend(res)
             if self.test:
                 break
-        df = pd.DataFrame(objects)
-        return df
+        return objects

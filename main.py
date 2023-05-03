@@ -34,7 +34,8 @@ PARTITION_COLS = ["seasonId", "archetypeId", "archetypeName"]
 def main(test=False):
     params = {"seasonId": 28}
     extractor = Extractor(url=URL, headers=HEADERS, params=params, test=test)
-    df = extractor.execute()
+    objects = extractor.execute()
+    df = pd.DataFrame(objects)
     logging.info("Extractor done")
     # df.to_csv("df.csv", index=False)
 

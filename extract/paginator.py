@@ -63,6 +63,11 @@ class Paginator:
             jsn = response.json()
             # expects a schema of
             # {"page": int, "total": int, "objects": [...]}
+            check_type = isinstance(jsn, dict) and "total" in jsn and "objects" in jsn
+            if not check_type:
+                yield jsn
+                # manually tell Python no more items to iterate
+                raise StopIteration
             total = jsn["total"]
             objs = jsn["objects"]
             logging.debug(f"{total} objects found")
