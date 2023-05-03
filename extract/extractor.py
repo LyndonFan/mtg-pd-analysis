@@ -19,7 +19,7 @@ class Extractor:
             url=self.url,
             page_size=self.page_size,
             headers=self.headers,
-            params=self.params
+            params=self.params,
         )
 
     def execute(self) -> pd.DataFrame:

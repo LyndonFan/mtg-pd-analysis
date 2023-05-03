@@ -15,15 +15,8 @@ class ArchetypeWinRateAggregator(Aggregator):
             "archetypeId",
             "archetypeName",
         ]
-        extra_columns = [
-            "personId",
-            "wins",
-            "matches"
-        ]
-        super().__init__(
-            groupby_cols,
-            groupby_cols+extra_columns
-        )
+        extra_columns = ["personId", "wins", "matches"]
+        super().__init__(groupby_cols, groupby_cols + extra_columns)
 
     def execute(self, df: pd.DataFrame) -> pd.DataFrame:
         df = self._preprocess(df)

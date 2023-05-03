@@ -25,11 +25,7 @@ with open("transform/transformations.json") as f:
     TRANSFORMATIONS = json.load(f)
 TARGET = os.environ["TARGET"]
 BUCKET = os.environ["BUCKET"]
-PARTITION_COLS = [
-    "seasonId",
-    "archetypeId",
-    "archetypeName"
-]
+PARTITION_COLS = ["seasonId", "archetypeId", "archetypeName"]
 
 # notifier = Notifier(os.environ["EMAIL"])
 

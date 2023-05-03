@@ -4,22 +4,15 @@ import logging
 from .aggregator import Aggregator
 from .aggregate_manager import AggregateManager
 
-GROUPBY_COLUMNS = [
-    "seasonId",
-    "sourceName",
-    "archetypeId",
-    "archetypeName"
-]
+GROUPBY_COLUMNS = ["seasonId", "sourceName", "archetypeId", "archetypeName"]
+
 
 class ArchetypeCardsAggregator(Aggregator):
     def __init__(self, column: str) -> None:
         self.column = column
         extra_columns = ["matches", "wins"]
         extra_columns.append(column)
-        super().__init__(
-            GROUPBY_COLUMNS,
-            GROUPBY_COLUMNS + extra_columns
-        )
+        super().__init__(GROUPBY_COLUMNS, GROUPBY_COLUMNS + extra_columns)
 
     def execute(self, df: pd.DataFrame) -> pd.DataFrame:
         df = self._preprocess(df)
@@ -38,7 +31,7 @@ class ArchetypeCardsAggregator(Aggregator):
                 decks=pd.NamedAgg("wins", "count"),
                 n=pd.NamedAgg("n", "sum"),
                 wins=pd.NamedAgg("wins", "sum"),
-                matches=pd.NamedAgg("matches", "sum")
+                matches=pd.NamedAgg("matches", "sum"),
             )
             _df["includeRate"] = _df["decks"] * 1.0 / n_decks
             _df["includeAverageNumber"] = _df["n"] * 1.0 / _df["decks"]
@@ -50,10 +43,12 @@ class ArchetypeCardsAggregator(Aggregator):
         df = pd.concat(res_dfs, axis=0, ignore_index=True)
         return df
 
+
 @AggregateManager.register("average_archetype_maindeck")
 class ArchetypeMaindeckAggregator(ArchetypeCardsAggregator):
     def __init__(self) -> None:
         super().__init__("maindeck")
+
 
 @AggregateManager.register("average_archetype_sideboard")
 class ArchetypeSideboardAggregator(ArchetypeCardsAggregator):

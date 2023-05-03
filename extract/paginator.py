@@ -8,6 +8,7 @@ import logging
 
 WAIT_RESPONSE_CODES: List[int] = [429, 503, 504]
 
+
 @dataclass
 class Paginator:
     url: str
@@ -21,8 +22,7 @@ class Paginator:
             self.params.pop("page")
         if "pageSize" not in self.params:
             self.params["pageSize"] = self.page_size
-    
-    
+
     def get_or_retry(
         self,
         session: requests.Session,
@@ -80,6 +80,6 @@ class Paginator:
                 assert response.status_code == 200, response.content.decode()
                 jsn = response.json()
                 objs = jsn["objects"]
-                self.print_debug_progress(i+1, total_pages)
+                self.print_debug_progress(i + 1, total_pages)
                 yield objs
                 last_called = time.perf_counter()
