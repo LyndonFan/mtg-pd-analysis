@@ -33,8 +33,6 @@ class Writer:
     ) -> None:
         path = os.path.join(self.bucket, filename)
         folder = os.path.dirname(path)
-        if os.path.exists(path):
-            os.remove(path)
         if not os.path.exists(folder):
             os.makedirs(folder, exist_ok=True)
         kwargs = {**self.write_kwargs, "partition_cols": partition_cols}
@@ -46,8 +44,6 @@ class Writer:
         self, df: pd.DataFrame, filename: str, partition_cols: List[str]
     ) -> None:
         path = self.fs.sep.join([self.bucket, filename])
-        if self.fs.exists(path):
-            self.fs.rm(path)
         kwargs = {**self.write_kwargs, "partition_cols": partition_cols}
         if partition_cols:
             kwargs["partition_cols"] = partition_cols
