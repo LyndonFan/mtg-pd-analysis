@@ -47,8 +47,7 @@ class Writer:
         kwargs = {**self.write_kwargs, "partition_cols": partition_cols}
         if partition_cols:
             kwargs["partition_cols"] = partition_cols
-        with self.fs.open("gs://" + path, "wb") as fo:
-            df.to_parquet(fo, **kwargs)
+        df.to_parquet("gs://"+path, **kwargs)
 
     def _write(
         self, df: pd.DataFrame, filename: str, partition_cols: List[str]
