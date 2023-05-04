@@ -1,5 +1,6 @@
 .DS_Store
 data/
+mtg-pd-data/
 *.pyc
 poetry.lock
 .env

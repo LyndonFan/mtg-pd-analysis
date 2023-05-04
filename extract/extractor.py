@@ -25,7 +25,7 @@ class Extractor:
         logging.info(
             f"Start fetching data from {self.url} with {self.page_size=} and paras"
         )
-        logging.info(self.params)
+        logging.debug(self.params)
         objects = []
         for res in self.paginator.execute():
             objects.extend(res)

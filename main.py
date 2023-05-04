@@ -32,7 +32,7 @@ PARTITION_COLS = ["seasonId", "archetypeId", "archetypeName"]
 
 @error_wrapper
 def main(test=False):
-    params = {"seasonId": 28}
+    params = {"seasonId": 29}
     extractor = Extractor(url=URL, headers=HEADERS, params=params, test=test)
     objects = extractor.execute()
     df = pd.DataFrame(objects)
@@ -45,7 +45,8 @@ def main(test=False):
     )
     df = transformer.execute(df)
     logging.info("Transformer done")
-
+    logging.debug(f"{df.shape=}")
+    logging.debug(f"{df['seasonId'].value_counts().to_dict()}")
     writer = Writer(
         target=TARGET,
         bucket=BUCKET,
