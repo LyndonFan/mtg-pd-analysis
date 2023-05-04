@@ -45,8 +45,8 @@ def main(test=False):
     )
     df = transformer.execute(df)
     logging.info("Transformer done")
-    logging.debug(f"{df.shape=}")
-    logging.debug(f"{df['seasonId'].value_counts().to_dict()}")
+    logging.info(f"{df.shape=}")
+    logging.info(f"{df['seasonId'].value_counts().to_dict()}")
     writer = Writer(
         target=TARGET,
         bucket=BUCKET,
@@ -69,7 +69,7 @@ def entry_point(event, context):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     import argparse
 
     p = argparse.ArgumentParser()

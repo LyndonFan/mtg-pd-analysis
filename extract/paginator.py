@@ -37,7 +37,7 @@ class Paginator:
             response = session.get(self.url, headers=self.headers, params=params)
             if response.status_code == 200:
                 return response
-            logging.debug(response.content.decode("utf-8").strip())
+            logging.info(response.content.decode("utf-8").strip())
             if response.status_code not in WAIT_RESPONSE_CODES:
                 return response
             if i == max_num_retries - 1:
@@ -50,7 +50,7 @@ class Paginator:
         s = str(i)
         num = ceil(log10(total + 1))
         s = " " * (num - len(s)) + s
-        logging.debug(f"Yielding object {s}/{total}")
+        logging.info(f"Yielding object {s}/{total}")
 
     def execute(self) -> Generator[Dict[str, Any], None, None]:
         params = {**self.params}
@@ -70,7 +70,7 @@ class Paginator:
                 raise StopIteration
             total = jsn["total"]
             objs = jsn["objects"]
-            logging.debug(f"{total} objects found")
+            logging.info(f"{total} objects found")
             total_pages = ceil(total / len(objs))
             self.print_debug_progress(1, total_pages)
             yield objs

@@ -69,22 +69,22 @@ class Transformer:
                 continue
             name, source, target, args, kwargs = [dct[c] for c in KEYS]
             f = self.TRANSFORM_NAMES[name]
-            logging.debug(
+            logging.info(
                 "Running " + self._transform_repr(name, target, source, *args, **kwargs)
             )
             df[target] = f(df[source], *args, **kwargs)
         keep_columns = []
         for source, dct in self.schema.items():
             if dct["dtype"] == "object":
-                logging.debug(f"Setting {source} as dtype=object")
+                logging.info(f"Setting {source} as dtype=object")
                 keep_columns.append(source)
                 continue
             else:
-                logging.debug(f"Setting {source} as dtype={dct['dtype']}")
+                logging.info(f"Setting {source} as dtype={dct['dtype']}")
                 df.loc[df[source].isna(), source] = None
                 df[source] = df[source].astype(dct["dtype"])
             if dct["dtype"] == "category" and "categories" in dct:
-                logging.debug(f"Setting categories for {source} as {dct['categories']}")
+                logging.info(f"Setting categories for {source} as {dct['categories']}")
                 df[source] = df[source].cat.set_categories(dct["categories"])
             keep_columns.append(source)
         df = df[keep_columns].copy()
