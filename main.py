@@ -46,7 +46,6 @@ def main(test=False):
     df = transformer.execute(df)
     logging.info("Transformer done")
     logging.info(f"{df.shape=}")
-    logging.info(f"{df['seasonId'].value_counts().to_dict()}")
     writer = Writer(
         target=TARGET,
         bucket=BUCKET,

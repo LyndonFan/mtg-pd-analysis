@@ -1,106 +1,112 @@
 [
-    {
-        "target": "url",
-        "name": "prepend",
-        "source": "url",
-        "args": ["https://pennydreadfulmagic.com"]
-    },
-    {
-        "target": "omw",
-        "name": "str_replace",
-        "source": "omw",
-        "args": ["%", ""]
-    },
-    {
-        "target": "omwPercent",
-        "name": "replace",
-        "source": "omw",
-        "kwargs": {
-            "to_replace": "",
-            "value": null
-        }
-    },
-    {
-        "target": "matches",
-        "name": "column_sum",
-        "source": ["wins", "losses", "draws"]
-    },
-    {
-        "target": "archetypeId",
-        "name": "fillna",
-        "source": "archetypeId",
-        "args": [-1]
-    },
-    {
-        "target": "archetypeName",
-        "name": "fillna",
-        "source": "archetypeName",
-        "args": [""]
-    },
-    {
-        "target": "colorHasW",
-        "name": "isin_list",
-        "source": "colors",
-        "args": ["W"]
-    },
-    {
-        "target": "colorHasU",
-        "name": "isin_list",
-        "source": "colors",
-        "args": ["U"]
-    },
-    {
-        "target": "colorHasB",
-        "name": "isin_list",
-        "source": "colors",
-        "args": ["B"]
-    },
-    {
-        "target": "colorHasR",
-        "name": "isin_list",
-        "source": "colors",
-        "args": ["R"]
-    },
-    {
-        "target": "colorHasG",
-        "name": "isin_list",
-        "source": "colors",
-        "args": ["G"]
-    },
-    {
-        "target": "colorHasC",
-        "name": "isin_list",
-        "source": "colors",
-        "args": ["C"]
-    },
-    {
-        "target": "colorHasS",
-        "name": "isin_list",
-        "source": "colors",
-        "args": ["S"]
-    },
-    {
-        "target": "createdDatetime",
-        "name": "to_datetime",
-        "source": "createdDate",
-        "kwargs": {"unit": "s"}
-    },
-    {
-        "target": "createdDate",
-        "name": "strftime",
-        "source": "createdDatetime",
-        "args": ["%Y%m%d"]
-    },
-    {
-        "target": "updatedDatetime",
-        "name": "to_datetime",
-        "source": "updatedDate",
-        "kwargs": {"unit": "s"}
-    },
-    {
-        "target": "updatedDate",
-        "name": "strftime",
-        "source": "updatedDatetime",
-        "args": ["%Y%m%d"]
-    }
+	{
+		"target": "url",
+		"name": "prepend",
+		"source": "url",
+		"args": ["https://pennydreadfulmagic.com"]
+	},
+	{
+		"target": "omw",
+		"name": "str_replace",
+		"source": "omw",
+		"args": ["%", ""]
+	},
+	{
+		"target": "omwPercent",
+		"name": "replace",
+		"source": "omw",
+		"kwargs": {
+			"to_replace": "",
+			"value": null
+		}
+	},
+	{
+		"target": "matches",
+		"name": "column_sum",
+		"source": ["wins", "losses", "draws"]
+	},
+	{
+		"target": "archetypeId",
+		"name": "fillna",
+		"source": "archetypeId",
+		"args": [-1]
+	},
+	{
+		"target": "archetypeName",
+		"name": "fillna",
+		"source": "archetypeName",
+		"args": ["N/A"]
+	},
+	{
+		"target": "archetypeName",
+		"name": "replace",
+		"source": "archetypeName",
+		"args": ["", "N/A"]
+	},
+	{
+		"target": "colorHasW",
+		"name": "isin_list",
+		"source": "colors",
+		"args": ["W"]
+	},
+	{
+		"target": "colorHasU",
+		"name": "isin_list",
+		"source": "colors",
+		"args": ["U"]
+	},
+	{
+		"target": "colorHasB",
+		"name": "isin_list",
+		"source": "colors",
+		"args": ["B"]
+	},
+	{
+		"target": "colorHasR",
+		"name": "isin_list",
+		"source": "colors",
+		"args": ["R"]
+	},
+	{
+		"target": "colorHasG",
+		"name": "isin_list",
+		"source": "colors",
+		"args": ["G"]
+	},
+	{
+		"target": "colorHasC",
+		"name": "isin_list",
+		"source": "colors",
+		"args": ["C"]
+	},
+	{
+		"target": "colorHasS",
+		"name": "isin_list",
+		"source": "colors",
+		"args": ["S"]
+	},
+	{
+		"target": "createdDatetime",
+		"name": "to_datetime",
+		"source": "createdDate",
+		"kwargs": { "unit": "s" }
+	},
+	{
+		"target": "createdDate",
+		"name": "strftime",
+		"source": "createdDatetime",
+		"args": ["%Y%m%d"]
+	},
+	{
+		"target": "updatedDatetime",
+		"name": "to_datetime",
+		"source": "updatedDate",
+		"kwargs": { "unit": "s" }
+	},
+	{
+		"target": "updatedDate",
+		"name": "strftime",
+		"source": "updatedDatetime",
+		"args": ["%Y%m%d"]
+	}
 ]
