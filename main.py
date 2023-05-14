@@ -31,8 +31,15 @@ PARTITION_COLS = ["seasonId", "archetypeId", "archetypeName"]
 
 
 @error_wrapper
-def main():
-    params = {"seasonId": 29}
+def main(seasonId: "int | None" = None):
+    if seasonId is None:
+        logging.info(f"seasonId not provided, checking for total number of seasons...")
+        season_codes_url = URL.replace("decks", "seasoncodes")
+        extractor = Extractor(url=season_codes_url, headers=HEADERS)
+        season_codes = extractor.execute()
+        seasonId = len(season_codes)
+    logging.info(f"Running with {seasonId=}")
+    params = {"seasonId": seasonId}
     extractor = Extractor(url=URL, headers=HEADERS, params=params)
     objects = extractor.execute()
     df = pd.DataFrame(objects)
@@ -72,7 +79,13 @@ if __name__ == "__main__":
     import argparse
 
     p = argparse.ArgumentParser()
-    p.add_argument("--test", dest="test", action="store_true", default=False)
+    p.add_argument(
+        metavar="SEASONID",
+        dest="seasonId",
+        nargs="?",
+        type=int,
+        help="Season ID to fetch and process. If not provided, uses latest season",
+    )
     import time
 
     args = p.parse_args()
