@@ -31,9 +31,9 @@ PARTITION_COLS = ["seasonId", "archetypeId", "archetypeName"]
 
 
 @error_wrapper
-def main(test=False):
+def main():
     params = {"seasonId": 29}
-    extractor = Extractor(url=URL, headers=HEADERS, params=params, test=test)
+    extractor = Extractor(url=URL, headers=HEADERS, params=params)
     objects = extractor.execute()
     df = pd.DataFrame(objects)
     logging.info("Extractor done")

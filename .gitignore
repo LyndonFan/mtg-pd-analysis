@@ -5,3 +5,4 @@ mtg-pd-data/
 poetry.lock
 .env
 .vscode
+.keys
