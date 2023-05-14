@@ -66,8 +66,7 @@ class Paginator:
             check_type = isinstance(jsn, dict) and "total" in jsn and "objects" in jsn
             if not check_type:
                 yield jsn
-                # manually tell Python no more items to iterate
-                raise StopIteration
+                return
             total = jsn["total"]
             objs = jsn["objects"]
             logging.info(f"{total} objects found")
