@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-URL = "https://pennydreadfulmagic.com/api/decks/"
+URL = "https://pennydreadfulmagic.com/api/decks"
 with open("headers.json") as f:
     HEADERS = json.load(f)
 with open("transform/schema.json") as f:
