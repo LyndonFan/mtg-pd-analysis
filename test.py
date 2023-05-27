@@ -58,7 +58,7 @@ def connect():
             password=conf["dbPassword"],
             sslmode="verify-full",
             sslrootcert=conf["sslRootCert"],
-            connect_timeout=10,
+            connect_timeout=60,
         )
         return yb
     except Exception as e:
