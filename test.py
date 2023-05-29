@@ -2,29 +2,31 @@ import os
 import psycopg2
 from psycopg2.extras import execute_values
 import pandas as pd
+from time import perf_counter
 
 from dotenv import dotenv_values
 
 conf = {**dotenv_values()}
 
 CREATE_ENUM_QUERY = """
-    CREATE TYPE deckSource AS ENUM ('League', 'Gatherling');
+    DO $$ BEGIN
+        CREATE TYPE deckSource AS ENUM ('League', 'Gatherling');
+    EXCEPTION
+        WHEN duplicate_object THEN null;
+    END $$;
 """
-
 CREATE_ARCHETYPE_QUERY = """
     CREATE TABLE IF NOT EXISTS archetypes (
         id INTEGER PRIMARY KEY,
-        archetype VARCHAR(64),
+        archetype VARCHAR(64)
     );
 """
-
 CREATE_PEOPLE_QUERY = """
     CREATE TABLE IF NOT EXISTS people (
         id INTEGER PRIMARY KEY,
-        name VARCHAR(64),
+        name VARCHAR(64)
     );
 """
-
 CREATE_DECKS_QUERY = """
     CREATE TABLE IF NOT EXISTS decks (
         id INTEGER PRIMARY KEY,
@@ -68,15 +70,18 @@ def connect():
 
 def transactional(func):
     def inner(db, *args, **kwargs):
+        start_time = perf_counter()
         try:
             with db.cursor() as cur:
                 res = func(cur, *args, **kwargs)
             db.commit()
             return res
         except Exception as e:
+            db.close()
             raise e
         finally:
-            db.close()
+            end_time = perf_counter()
+            print(f"This took {end_time-start_time:.3f} seconds")
 
     return inner
 
@@ -93,7 +98,7 @@ def create_tables(cur):
 
 @transactional
 def insert_into(cur, tableName: str, df: pd.DataFrame) -> None:
-    query = f"INSERT INTO {tableName} VALUES (%s)"
+    query = f"INSERT INTO {tableName} VALUES %s"
     values = df.values.tolist()
     execute_values(cur, query, values)
     print(f"Inserted {len(df)} rows of data into table {tableName}")
@@ -114,20 +119,30 @@ def main():
         "sideboard",
     ]
     df = pd.read_parquet(deck_path, columns=COLUMNS)
+    id_vc = df["id"].value_counts()
+    assert ~(id_vc>1).any(), id_vc[id_vc>1]
     archetype_df = df[["archetypeId", "archetypeName"]].drop_duplicates()
     people_df = df[["personId", "person"]].drop_duplicates()
     deck_df = df[["id", "name", "seasonId", "sourceName", "personId", "archetypeId"]]
-    maindeck_df = df[["id", "maindeck"]].explode("maindeck")
-    sideboard_df = df[["id", "sideboard"]].explode("sideboard")
+    board_dfs = {}
+    for board in ["maindeck", "sideboard"]:
+        cards_df = df[["id", board]].explode(board)
+        cards_df = cards_df[cards_df[board].notnull()]
+        cards_df["n"] = cards_df[board].map(lambda x: x.get("n"))
+        cards_df["name"] = cards_df[board].map(lambda x: x.get("name"))
+        cards_df = cards_df.drop(columns=[board])
+        print(cards_df)
+        board_dfs[board] = cards_df
     yb = connect()
     print("Connected to database")
     create_tables(yb)
     print("Created tables")
-    insert_into(yb, "archetypes", archetype_df)
-    insert_into(yb, "people", people_df)
-    insert_into(yb, "decks", deck_df)
-    insert_into(yb, "maindecks", maindeck_df)
-    insert_into(yb, "sideboards", sideboard_df)
+    # insert_into(yb, "archetypes", archetype_df)
+    # insert_into(yb, "people", people_df)
+    # insert_into(yb, "decks", deck_df)
+    for board, _df in board_dfs.items():
+        insert_into(yb, board+"s", _df)
+    yb.close()
 
 
 if __name__ == "__main__":
