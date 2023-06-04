@@ -6,7 +6,7 @@ from typing import Literal
 
 from extract import Extractor
 from transform import Transformer
-from load import Writer
+from load import ParquetWriter
 from aggregate import AggregateManager
 from handler import error_wrapper
 
@@ -53,7 +53,7 @@ def main(seasonId: "int | None" = None):
     df = transformer.execute(df)
     logging.info("Transformer done")
     logging.info(f"{df.shape=}")
-    writer = Writer(
+    writer = ParquetWriter(
         target=TARGET,
         bucket=BUCKET,
     )

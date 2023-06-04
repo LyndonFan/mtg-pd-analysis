@@ -4,7 +4,7 @@ import pandas as pd
 import logging
 
 from .aggregator import Aggregator
-from load.writer import Writer
+from load import Writer
 
 
 @dataclass
