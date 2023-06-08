@@ -11,7 +11,7 @@ config["sslMode"] = "verify-full"
 class DatabaseWriter(Writer):
     def __init__(self, table_name: str):
         self.table_name = table_name
-    
+
     def _connect(self) -> psycopg2.connection:
         conn = psycopg2.connect(
             host=config["dbHost"],

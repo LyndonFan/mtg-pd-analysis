@@ -10,6 +10,7 @@ import re
 
 from .writer import Writer
 
+
 @dataclass
 class ParquetWriter(Writer):
     bucket: str

@@ -120,7 +120,7 @@ def main():
     ]
     df = pd.read_parquet(deck_path, columns=COLUMNS)
     id_vc = df["id"].value_counts()
-    assert ~(id_vc>1).any(), id_vc[id_vc>1]
+    assert ~(id_vc > 1).any(), id_vc[id_vc > 1]
     archetype_df = df[["archetypeId", "archetypeName"]].drop_duplicates()
     people_df = df[["personId", "person"]].drop_duplicates()
     deck_df = df[["id", "name", "seasonId", "sourceName", "personId", "archetypeId"]]
@@ -141,7 +141,7 @@ def main():
     # insert_into(yb, "people", people_df)
     # insert_into(yb, "decks", deck_df)
     for board, _df in board_dfs.items():
-        insert_into(yb, board+"s", _df)
+        insert_into(yb, board + "s", _df)
     yb.close()
 
 

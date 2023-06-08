@@ -1,6 +1,7 @@
 import pandas as pd
 from abc import ABC
 
+
 class Writer(ABC):
     def execute(self, df: pd.DataFrame, *args, **kwargs):
         """
@@ -8,7 +9,7 @@ class Writer(ABC):
 
         Args:
             df (pd.DataFrame): The input DataFrame for the function.
-        
+
         Returns:
             None
         """
