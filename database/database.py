@@ -10,13 +10,16 @@ conf["sslMode"] = "verify-full"
 
 
 class Database:
-    def __init__(self, config: "dict[str, Any] | None" = None):
-        if config is None:
-            config = conf
-        self.config = config
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
+    def __init__(self):
+        self.config = conf
+        self.connection = None
 
-    def _connect(self) -> psycopg2.connection:
+    def _connect(self) -> None:
         conn = psycopg2.connect(
             host=self.config["dbHost"],
             port=self.config["dbPort"],
@@ -27,6 +30,4 @@ class Database:
             sslrootcert=self.config["sslRootCert"],
             connect_timeout=10,
         )
-        return conn
-    
-    
+        self.connection = conn
