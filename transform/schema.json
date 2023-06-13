@@ -31,9 +31,6 @@
 	"colorHasC": {
 		"dtype": "bool"
 	},
-	"colorHasS": {
-		"dtype": "bool"
-	},
 	"createdDatetime": {
 		"dtype": "datetime64[ns]"
 	},
