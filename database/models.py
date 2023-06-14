@@ -1,9 +1,15 @@
+import enum
 from typing import Optional
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, SmallInteger, DateTime
+from sqlalchemy import String, SmallInteger, DateTime, Enum
+from sqlalchemy import ForeignKey, CheckConstraint
 
 class Base(DeclarativeBase):
     pass
+
+class Source(enum.Enum):
+    league = "League"
+    gatherling = "Gatherling"
 
 class Person(Base):
     __tablename__ = "people"
@@ -30,13 +36,12 @@ class Deck(Base):
     colorHasR: Mapped[bool]
     colorHasG: Mapped[bool]
     colorHasC: Mapped[bool]
-    colorHasS: Mapped[bool]
     createdDatetime = mapped_column(DateTime)
     updatedDatetime = mapped_column(DateTime)
     personId: Mapped[int] = mapped_column(ForeignKey("people.id"))
     people: Mapped["Person"] = relationship(back_populates="decks")
     seasonId: Mapped[int] = mapped_column(SmallInteger)
-    sourceName = mapped_column(String)
+    sourceName = mapped_column(Enum(Source))
     url: Mapped[str] = mapped_column(String(256))
     archetypeId: Mapped[int] = mapped_column(ForeignKey("archetypes.id"))
     archetypes: Mapped["Archetype"] = relationship(back_populates="decks")
