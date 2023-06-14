@@ -19,7 +19,7 @@ class Database:
         self.config = conf
         self._connection = None
 
-    def connection(self) -> psycopg2.connection:
+    def connection(self) -> "psycopg2.connection":
         if self._connection is None:
             self._connect()
         return self._connection

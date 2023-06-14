@@ -7,17 +7,20 @@ from .database import Database
 
 
 class DatabaseWriter(Writer):
-    def __init__(self, table_name: str):
+    def __init__(self, table_name):
         self.table_name = table_name
         self.database = Database()
 
 
     def execute(self, df: pd.DataFrame):
-        conn = self.database.connection()
         columns = list(df.columns)
         values = [tuple(row) for row in df.values]
         placeholders = ",".join(["%s"] * len(columns))
-        insert_sql = f"INSERT INTO {self.table_name} ({','.join(columns)}) VALUES ({placeholders})"
+        insert_sql = f"""
+            INSERT INTO {self.table_name} ({','.join(columns)}) VALUES ({placeholders})
+            ON CONFLICT DO UPDATE
+        """
+        conn = self.database.connection()
         try:
             with conn:
                 with conn.cursor() as cur:
