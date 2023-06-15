@@ -17,6 +17,12 @@ class Database:
             cls._instance = super().__new__(cls)
         return cls._instance
 
+    @classmethod
+    def common_connection(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance.connection()
+
     def __init__(self):
         self.config = conf
         self._connection = None

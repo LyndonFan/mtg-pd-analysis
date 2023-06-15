@@ -1,4 +1,5 @@
 import pandas as pd
+from database.database import Database
 from .database_writer import DatabaseWriter
 
 
@@ -13,12 +14,14 @@ class Loader:
         archetype_df = df[["archetypeId", "archetype"]].drop_duplicates()
         archetype_df.columns = ["id", "archetype"]
         DatabaseWriter("archetypes").execute(archetype_df)
+        common_connection = Database.common_connection()
         info_df = df.drop(columns=["maindeck", "sideboard", "person", "archetype"])
-        DatabaseWriter("decks").execute(info_df)
-        for board in ["maindeck", "sideboard"]:
-            cards_df = df[["id", board]].explode(board)
-            board_df = pd.DataFrame(cards_df[board].values.tolist())
-            cards_df = pd.concat([cards_df, board_df], axis=1)
-            cards_df = cards_df.drop(columns=board)
-            cards_df.columns = ["deckId", "n", "name"]
-            DatabaseWriter(board + "s").execute(cards_df)
+        with common_connection:
+            DatabaseWriter("decks").execute(info_df, True)
+            for board in ["maindeck", "sideboard"]:
+                cards_df = df[["id", board]].explode(board)
+                board_df = pd.DataFrame(cards_df[board].values.tolist())
+                cards_df = pd.concat([cards_df, board_df], axis=1)
+                cards_df = cards_df.drop(columns=board)
+                cards_df.columns = ["deckId", "n", "name"]
+                DatabaseWriter(board + "s").execute(cards_df, True)
