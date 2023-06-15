@@ -2,11 +2,10 @@ import json
 import os
 import pandas as pd
 import logging
-from typing import Literal
 
 from extract import Extractor
 from transform import Transformer
-from load import ParquetWriter
+from load import ParquetWriter, Loader
 from aggregate import AggregateManager
 from handler import error_wrapper
 
@@ -21,8 +20,6 @@ with open("headers.json") as f:
     HEADERS = json.load(f)
 with open("transform/schema.json") as f:
     SCHEMA = json.load(f)
-with open("transform/transformations.json") as f:
-    TRANSFORMATIONS = json.load(f)
 TARGET = os.environ["TARGET"]
 BUCKET = os.environ["BUCKET"]
 PARTITION_COLS = ["seasonId", "archetypeId", "archetypeName"]
@@ -46,27 +43,30 @@ def main(seasonId: "int | None" = None):
     logging.info("Extractor done")
     # df.to_csv("df.csv", index=False)
 
-    transformer = Transformer(
-        transformations=TRANSFORMATIONS,
-        schema=SCHEMA,
-    )
+    transformer = Transformer(schema=SCHEMA)
     df = transformer.execute(df)
     logging.info("Transformer done")
     logging.info(f"{df.shape=}")
-    writer = ParquetWriter(
-        target=TARGET,
-        bucket=BUCKET,
-    )
-    writer.execute(
-        df,
-        filename="decks.parquet",
-        partition_cols=PARTITION_COLS,
-    )
-    logging.info("Writer done")
-    agg_manager = AggregateManager(writer)
-    agg_manager.execute(df)
-    logging.info("Aggregations done")
-    logging.info("All done")
+
+    loader = Loader()
+    loader.execute(df)
+    logging.info("Loader done")
+
+    # writer = ParquetWriter(
+    #     target=TARGET,
+    #     bucket=BUCKET,
+    # )
+    # writer.execute(
+    #     df,
+    #     filename="decks.parquet",
+    #     partition_cols=PARTITION_COLS,
+    # )
+    # logging.info("Writer done")
+
+    # agg_manager = AggregateManager(writer)
+    # agg_manager.execute(df)
+    # logging.info("Aggregations done")
+    # logging.info("All done")
     return
 
 
