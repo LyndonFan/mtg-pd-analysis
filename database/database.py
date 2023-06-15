@@ -10,6 +10,8 @@ conf["sslMode"] = "verify-full"
 
 
 class Database:
+    _instance = None
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -35,4 +37,4 @@ class Database:
             sslrootcert=self.config["sslRootCert"],
             connect_timeout=10,
         )
-        self.connection = conn
+        self._connection = conn
