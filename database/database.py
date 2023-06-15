@@ -24,6 +24,8 @@ class Database:
     def connection(self) -> "psycopg2.connection":
         if self._connection is None:
             self._connect()
+        elif self._connection.closed:
+            self._connect()
         return self._connection
 
     def _connect(self) -> None:
