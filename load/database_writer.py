@@ -11,7 +11,6 @@ class DatabaseWriter(Writer):
         self.table_name = table_name
         self.database = Database()
 
-
     def execute(self, df: pd.DataFrame):
         columns = list(df.columns)
         values = [tuple(row) for row in df.values]

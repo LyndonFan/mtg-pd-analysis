@@ -11,7 +11,7 @@ class Transformer:
         self.schema = schema
         sources = set(self.schema.keys())
         self.source_columns = list(sources)
-    
+
     def execute(self, df: pd.DataFrame) -> pd.DataFrame:
         df["url"] = "https://pennydreadfulmagic.com" + df["url"]
         df["omw"] = df["omw"].str.replace("%", "")
@@ -26,7 +26,7 @@ class Transformer:
         df["createdDate"] = df["createdDatetime"].dt.strftime("%Y%m%d")
         df["updatedDatetime"] = pd.to_datetime(df["updatedDate"], unit="s")
         df["updatedDate"] = df["updatedDatetime"].dt.strftime("%Y%m%d")
-        
+
         keep_columns = []
         for source, dct in self.schema.items():
             if dct["dtype"] == "object":

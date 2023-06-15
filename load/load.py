@@ -1,4 +1,5 @@
 import pandas as pd
+from .database_writer import DatabaseWriter
 
 
 class Loader:
@@ -20,5 +21,4 @@ class Loader:
             cards_df = pd.concat([cards_df, board_df], axis=1)
             cards_df = cards_df.drop(columns=board)
             cards_df.columns = ["deckId", "n", "name"]
-            DatabaseWriter(board+"s").execute(cards_df)
-
+            DatabaseWriter(board + "s").execute(cards_df)
