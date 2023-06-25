@@ -23,6 +23,8 @@ class DatabaseWriter(Writer):
     ) -> bool:
         columns = df.columns.tolist()
         assert self.id_column in columns, f"{self.id_column=} not in {columns=}"
+        # TODO: handle NAType
+        # psycopg2.ProgrammingError: can't adapt type 'NAType'
         values = [tuple(row) for row in df.values]
         placeholders = ",".join(["%s"] * len(columns))
         rest_columns = [c for c in columns if c != self.id_column]
