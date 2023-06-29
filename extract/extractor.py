@@ -11,6 +11,7 @@ class Extractor:
     page_size: int = 500
     headers: Dict[str, Any] = field(default_factory=dict)
     params: Dict[str, Any] = field(default_factory=dict)
+    test: bool = False
 
     def __post_init__(self):
         self.paginator = Paginator(
@@ -18,6 +19,7 @@ class Extractor:
             page_size=self.page_size,
             headers=self.headers,
             params=self.params,
+            test=self.test,
         )
 
     def execute(self) -> List:

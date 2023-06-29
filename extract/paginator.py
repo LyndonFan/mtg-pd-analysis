@@ -16,6 +16,7 @@ class Paginator:
     min_time_between_calls: float = 0.5
     headers: Dict[str, Any] = field(default_factory=dict)
     params: Dict[str, Any] = field(default_factory=dict)
+    test: bool = False
 
     def __post_init__(self):
         if "page" in self.params:
@@ -66,13 +67,15 @@ class Paginator:
             check_type = isinstance(jsn, dict) and "total" in jsn and "objects" in jsn
             if not check_type:
                 yield jsn
-                return
+                raise StopIteration
             total = jsn["total"]
             objs = jsn["objects"]
             logging.info(f"{total} objects found")
             total_pages = ceil(total / len(objs))
             self.print_debug_progress(1, total_pages)
             yield objs
+            if self.test:
+                raise StopIteration
             last_called = time.perf_counter()
             for i in range(1, total_pages):
                 params["page"] = i
