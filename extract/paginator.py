@@ -67,7 +67,7 @@ class Paginator:
             check_type = isinstance(jsn, dict) and "total" in jsn and "objects" in jsn
             if not check_type:
                 yield jsn
-                raise StopIteration
+                return
             total = jsn["total"]
             objs = jsn["objects"]
             logging.info(f"{total} objects found")
@@ -75,7 +75,7 @@ class Paginator:
             self.print_debug_progress(1, total_pages)
             yield objs
             if self.test:
-                raise StopIteration
+                return
             last_called = time.perf_counter()
             for i in range(1, total_pages):
                 params["page"] = i

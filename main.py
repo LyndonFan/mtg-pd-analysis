@@ -42,6 +42,7 @@ def main(seasonId: "int | None" = None, test: bool = False):
         headers=HEADERS,
         params=params,
         page_size=(10 if test else 500),
+        test=test,
     )
     objects = extractor.execute()
     df = pd.DataFrame(objects)
