@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import logging
+import io
 from time import perf_counter
 
 from dotenv import dotenv_values
@@ -17,10 +18,16 @@ class DatabaseWriter(Writer):
 
     def connection(self):
         return self.database.connection()
-    
+
     @staticmethod
     def fix_columns(columns: list[str]) -> list[str]:
         return [f'"{c}"' for c in columns]
+
+    def _pipe_to_io(self, df: pd.DataFrame) -> io.StringIO:
+        s = io.StringIO()
+        df.to_csv(s, index=False, encoding="utf-8")
+        s.seek(0)
+        return s
 
     def _generate_sql(self, columns: list[str], on_conflict_update: bool) -> str:
         placeholders = ",".join(["%s"] * len(columns))
@@ -73,7 +80,8 @@ class DatabaseWriter(Writer):
         finally:
             end_time = perf_counter()
             logging.info(
-                f"Writing {len(values)} rows to {self.table_name} took {end_time - start_time:.2f} seconds"
+                f"Writing {len(values)} rows to {self.table_name} "
+                f"took {end_time - start_time:.2f} seconds"
             )
             if inside_transaction:
                 conn.rollback()

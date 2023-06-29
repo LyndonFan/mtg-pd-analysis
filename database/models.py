@@ -12,7 +12,7 @@ class Base(DeclarativeBase):
 class Source(enum.Enum):
     league = "League"
     gatherling = "Gatherling"
-    
+
     @classmethod
     def convert(cls, value: str) -> Optional["Source"]:
         if value == Source.league.value:
@@ -21,6 +21,7 @@ class Source(enum.Enum):
             return Source.gatherling
         else:
             return None
+
 
 class Person(Base):
     __tablename__ = "people"
