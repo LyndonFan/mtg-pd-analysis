@@ -22,6 +22,20 @@ class DatabaseWriter(Writer):
     def fix_columns(columns: list[str]) -> list[str]:
         return [f'"{c}"' for c in columns]
 
+    def _generate_sql(self, columns: list[str], on_conflict_update: bool) -> str:
+        placeholders = ",".join(["%s"] * len(columns))
+        rest_columns = self.fix_columns([c for c in columns if c != self.id_column])
+        insert_sql = f"""
+            INSERT INTO {self.table_name} ({','.join(self.fix_columns(columns))}) VALUES ({placeholders})
+            ON CONFLICT ({self.id_column}) """
+        if on_conflict_update:
+            insert_sql += f"""DO UPDATE
+                SET {', '.join(f'{c}=EXCLUDED.{c}' for c in rest_columns)}
+            """
+        else:
+            insert_sql += f"""DO NOTHING"""
+        return insert_sql
+
     def execute(
         self,
         df: pd.DataFrame,
@@ -41,17 +55,7 @@ class DatabaseWriter(Writer):
             .apply(tuple, axis=1)
             .values.tolist()
         )
-        placeholders = ",".join(["%s"] * len(columns))
-        rest_columns = self.fix_columns([c for c in columns if c != self.id_column])
-        insert_sql = f"""
-            INSERT INTO {self.table_name} ({','.join(self.fix_columns(columns))}) VALUES ({placeholders})
-            ON CONFLICT ({self.id_column}) """
-        if on_conflict_update:
-            insert_sql += f"""DO UPDATE
-                SET {', '.join(f'{c}=EXCLUDED.{c}' for c in rest_columns)}
-            """
-        else:
-            insert_sql += f"""DO NOTHING"""
+        insert_sql = self._generate_sql(columns, on_conflict_update)
         logging.info(insert_sql)
         conn = self.database.connection()
         start_time = perf_counter()
