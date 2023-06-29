@@ -17,11 +17,15 @@ class Loader:
         common_connection = Database.common_connection()
         info_df = df.drop(columns=["maindeck", "sideboard", "person", "archetypeName"])
         with common_connection:
-            DatabaseWriter("decks").execute(info_df, True, True)
+            DatabaseWriter("decks").execute(
+                info_df, on_conflict_update=True, inside_transaction=True
+            )
             for board in ["maindeck", "sideboard"]:
                 cards_df = df[["id", board]].explode(board)
                 board_df = pd.DataFrame(cards_df[board].values.tolist())
                 cards_df = pd.concat([cards_df, board_df], axis=1)
                 cards_df = cards_df.drop(columns=board)
                 cards_df.columns = ["deckId", "n", "name"]
-                DatabaseWriter(board + "s", "deckId").execute(cards_df, True, True)
+                DatabaseWriter(board + "s", "deckId").execute(
+                    cards_df, on_conflict_update=True, inside_transaction=True
+                )
