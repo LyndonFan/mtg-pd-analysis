@@ -10,15 +10,15 @@ class Base(DeclarativeBase):
 
 
 class Source(enum.Enum):
-    league = "League"
-    gatherling = "Gatherling"
+    League = "League"
+    Gatherling = "Gatherling"
 
     @classmethod
     def convert(cls, value: str) -> Optional["Source"]:
-        if value == Source.league.value:
-            return Source.league
-        elif value == Source.gatherling.value:
-            return Source.gatherling
+        if value == Source.League.value:
+            return Source.League
+        elif value == Source.Gatherling.value:
+            return Source.Gatherling
         else:
             return None
 
