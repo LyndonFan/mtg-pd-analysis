@@ -10,9 +10,9 @@ from .writer import Writer
 
 
 class DatabaseWriter(Writer):
-    def __init__(self, table_name: str, id_column: str = "id") -> None:
+    def __init__(self, table_name: str, include_id: bool = True) -> None:
         self.table_name = table_name
-        self.id_column = id_column
+        self.include_id = include_id
         self.database = Database()
 
     @property
@@ -48,12 +48,12 @@ class DatabaseWriter(Writer):
     def _generate_insert_sql(self, columns: list[str], on_conflict_update: bool) -> str:
         fixed_all_columns = self.fix_columns(columns)
         fixed_all_cols_str = ", ".join(fixed_all_columns)
-        rest_columns = self.fix_columns([c for c in columns if c != self.id_column])
         insert_sql = f"""
             INSERT INTO {self.table_name}  ({fixed_all_cols_str})
             SELECT {fixed_all_cols_str} FROM {self.temp_table_name}
-            ON CONFLICT ("{self.id_column}") """
+            ON CONFLICT ("id") """
         if on_conflict_update:
+            rest_columns = self.fix_columns([c for c in columns if c != "id"])
             insert_sql += f"""DO UPDATE
                 SET {', '.join(f'{c}=EXCLUDED.{c}' for c in rest_columns)};
             """
@@ -71,7 +71,8 @@ class DatabaseWriter(Writer):
         print(df.head())
         print(df.dtypes)
         columns = df.columns.tolist()
-        assert self.id_column in columns, f"{self.id_column=} not in {columns=}"
+        if self.include_id:
+            assert "id" in columns, f"\"id\" not in {columns=}"
         # TODO: handle NAType
         # psycopg2.ProgrammingError: can't adapt type 'NAType'
         # if "sourceName" in df.columns:
