@@ -1,11 +1,10 @@
+import re
 import pandas as pd
-import numpy as np
 import logging
 import io
 from time import perf_counter
 
 from database import Database
-from database.models import Source
 from .writer import Writer
 
 
@@ -73,16 +72,6 @@ class DatabaseWriter(Writer):
         columns = df.columns.tolist()
         if self.include_id:
             assert "id" in columns, f"\"id\" not in {columns=}"
-        # TODO: handle NAType
-        # psycopg2.ProgrammingError: can't adapt type 'NAType'
-        # if "sourceName" in df.columns:
-        #     df["sourceName"] = df["sourceName"].map(Source.convert)
-        # values = (
-        #     df.astype("object")
-        #     .replace(np.nan, None)
-        #     .apply(tuple, axis=1)
-        #     .values.tolist()
-        # )
         
         # yugabyte db doesn't support ON COMMIT DROP >:(
         create_temp_table_sql = f"""
@@ -98,7 +87,8 @@ class DatabaseWriter(Writer):
         s = self._pipe_to_io(df)
 
         def main_logic(cursor):
-            # cursor.executemany(insert_sql, values)
+            # default executemany is just running loop under the hood
+            # so very slow
             self.print_sql(create_temp_table_sql)
             cursor.execute(create_temp_table_sql)
             self.print_sql(copy_sql)
