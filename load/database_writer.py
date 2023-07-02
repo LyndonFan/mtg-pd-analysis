@@ -71,8 +71,8 @@ class DatabaseWriter(Writer):
         print(df.dtypes)
         columns = df.columns.tolist()
         if self.include_id:
-            assert "id" in columns, f"\"id\" not in {columns=}"
-        
+            assert "id" in columns, f'"id" not in {columns=}'
+
         # yugabyte db doesn't support ON COMMIT DROP >:(
         create_temp_table_sql = f"""
             CREATE TEMP TABLE {self.temp_table_name}
