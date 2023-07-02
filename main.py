@@ -29,6 +29,8 @@ PARTITION_COLS = ["seasonId", "archetypeId", "archetypeName"]
 
 @error_wrapper
 def main(seasonId: "int | None" = None, test: bool = False):
+    if test:
+        logging.getLogger().setLevel(logging.DEBUG)
     if seasonId is None:
         logging.info(f"seasonId not provided, checking for total number of seasons...")
         season_codes_url = URL.replace("decks", "seasoncodes")
@@ -47,7 +49,6 @@ def main(seasonId: "int | None" = None, test: bool = False):
     objects = extractor.execute()
     df = pd.DataFrame(objects)
     logging.info("Extractor done")
-    # df.to_csv("df.csv", index=False)
 
     transformer = Transformer(schema=SCHEMA)
     df = transformer.execute(df)
