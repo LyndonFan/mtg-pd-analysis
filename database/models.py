@@ -25,14 +25,14 @@ class Source(enum.Enum):
 
 class Person(Base):
     __tablename__ = "people"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
     name: Mapped[str] = mapped_column(String(64), nullable=False)
     decks: Mapped[list["Deck"]] = relationship(back_populates="people")
 
 
 class Archetype(Base):
     __tablename__ = "archetypes"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
     archetype: Mapped[str] = mapped_column(String(64), nullable=False)
     decks: Mapped[list["Deck"]] = relationship(back_populates="archetypes")
 
@@ -40,7 +40,7 @@ class Archetype(Base):
 class Deck(Base):
     __tablename__ = "decks"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
     name = mapped_column(String)
     maindeck: Mapped["Maindeck"] = relationship(back_populates="deck")
     sideboard: Mapped["Sideboard"] = relationship(back_populates="deck")
