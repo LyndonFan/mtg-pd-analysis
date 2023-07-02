@@ -82,42 +82,47 @@ class DatabaseWriter(Writer):
         #     .apply(tuple, axis=1)
         #     .values.tolist()
         # )
+        
+        # yugabyte db doesn't support ON COMMIT DROP >:(
         create_temp_table_sql = f"""
             CREATE TEMP TABLE {self.temp_table_name}
-            (LIKE {self.table_name})
-            ON COMMIT DROP;
+            (LIKE {self.table_name});
         """
         copy_sql = self._generate_copy_sql(columns)
 
         insert_sql = self._generate_insert_sql(columns, on_conflict_update)
+
+        drop_temp_table_sql = f"""DROP TABLE {self.temp_table_name};"""
+
+        s = self._pipe_to_io(df)
+
+        def main_logic(cursor):
+            # cursor.executemany(insert_sql, values)
+            self.print_sql(create_temp_table_sql)
+            cursor.execute(create_temp_table_sql)
+            self.print_sql(copy_sql)
+            s = self._pipe_to_io(df)
+            cursor.copy_expert(copy_sql, s)
+            self.print_sql(insert_sql)
+            cursor.execute(insert_sql)
+            self.print_sql(drop_temp_table_sql)
+            cursor.execute(drop_temp_table_sql)
 
         conn = self.database.connection()
         start_time = perf_counter()
         try:
             if inside_transaction:
                 with conn.cursor() as cur:
-                    # cur.executemany(insert_sql, values)
-                    self.print_sql(create_temp_table_sql)
-                    cur.execute(create_temp_table_sql)
-                    self.print_sql(copy_sql)
-                    s = self._pipe_to_io(df)
-                    cur.copy_expert(copy_sql, s)
-                    self.print_sql(insert_sql)
-                    cur.execute(insert_sql)
+                    main_logic(cur)
             else:
                 with conn:
                     with conn.cursor() as cur:
-                        # cur.executemany(insert_sql, values)
-                        self.print_sql(create_temp_table_sql)
-                        cur.execute(create_temp_table_sql)
-                        self.print_sql(copy_sql)
-                        s = self._pipe_to_io(df)
-                        cur.copy_expert(copy_sql, s)
-                        self.print_sql(insert_sql)
-                        cur.execute(insert_sql)
+                        main_logic(cur)
                         conn.commit()
             return True
         except Exception as e:
+            if inside_transaction:
+                conn.rollback()
             logging.error(e.pgerror)
             raise e
         finally:
@@ -126,6 +131,3 @@ class DatabaseWriter(Writer):
                 f"Writing {len(df)} rows to {self.table_name} "
                 f"took {end_time - start_time:.2f} seconds"
             )
-            if inside_transaction:
-                conn.rollback()
-            conn.close()
