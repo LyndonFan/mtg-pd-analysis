@@ -8,29 +8,30 @@ class Loader:
         pass
 
     def execute(self, df: pd.DataFrame) -> None:
-        df_dict = {}
-        df_dict["people"] = df[["personId", "person"]].drop_duplicates()
-        df_dict["people"].columns = ["id", "name"]
-        df_dict["archetypes"] = df[["archetypeId", "archetypeName"]].drop_duplicates()
-        df_dict["archetypes"].columns = ["id", "archetype"]
-        df_dict["decks"] = df.drop(
+        people_df = df[["personId", "person"]].drop_duplicates()
+        people_df.columns = ["id", "name"]
+        archetypes_df = df[["archetypeId", "archetypeName"]].drop_duplicates()
+        archetypes_df.columns = ["id", "archetype"]
+        DatabaseWriter("people").execute(people_df)
+        DatabaseWriter("archetypes").execute(archetypes_df)
+        decks_df = df.drop(
             columns=["maindeck", "sideboard", "person", "archetypeName"]
         )
-        df_dict["decks"].to_csv("decks.csv")
+        df_dict = {}
         for board in ["maindeck", "sideboard"]:
             cards_df = df[["id", board]].explode(board).reset_index(drop=True)
-            cards_df.to_csv(f"{board}_info.csv")
             board_df = pd.DataFrame(cards_df[board].values.tolist())
-            board_df.to_csv(f"{board}_cards.csv")
             cards_df = pd.concat([cards_df, board_df], axis=1)
             df_dict[f"{board}s"] = cards_df.drop(columns=board)
             df_dict[f"{board}s"].columns = ["deckId", "n", "name"]
         common_connection = Database.common_connection()
         with common_connection:
-            for table_name, _df in df_dict.items():
-                DatabaseWriter(table_name).execute(
-                    _df,
+            DatabaseWriter("decks").execute(decks_df, inside_transaction=True)
+            # TODO: handle deck id update properly
+            for table_name in ["maindecks", "sideboards"]:
+                DatabaseWriter(table_name, include_id=False).execute(
+                    df_dict[table_name],
                     inside_transaction=True,
-                    on_conflict_update=table_name != "people",
+                    on_conflict_update=True,
                 )
             common_connection.commit()
