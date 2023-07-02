@@ -19,7 +19,7 @@ class Transformer:
         df["matches"] = df[["wins", "losses", "draws"]].sum(axis=1)
         df["archetypeId"] = df["archetypeId"].fillna(-1)
         df["archetypeName"] = df["archetypeName"].fillna("N/A")
-        df["archetypeName"] = df["archetypeName"].replace({})
+        df["archetypeName"] = df["archetypeName"].replace({"": "N/A"})
         for c in "WUBRGC":
             df[f"colorHas{c}"] = df["colors"].apply(lambda x: c in x)
         df["createdDatetime"] = pd.to_datetime(df["createdDate"], unit="s")
