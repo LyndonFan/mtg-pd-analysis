@@ -4,7 +4,6 @@ import logging
 import io
 from time import perf_counter
 
-from dotenv import dotenv_values
 from database import Database
 from database.models import Source
 from .writer import Writer
@@ -16,6 +15,10 @@ class DatabaseWriter(Writer):
         self.id_column = id_column
         self.database = Database()
 
+    @property
+    def temp_table_name(self) -> str:
+        return f"temp_{self.table_name}"
+
     def connection(self):
         return self.database.connection()
 
@@ -23,24 +26,39 @@ class DatabaseWriter(Writer):
     def fix_columns(columns: list[str]) -> list[str]:
         return [f'"{c}"' for c in columns]
 
+    @staticmethod
+    def print_sql(sql: str) -> None:
+        logging.info(sql.replace("\t", " ".strip()))
+
     def _pipe_to_io(self, df: pd.DataFrame) -> io.StringIO:
         s = io.StringIO()
-        df.to_csv(s, index=False, encoding="utf-8")
+        df.to_csv(s, header=False, index=False, encoding="utf-8")
         s.seek(0)
         return s
 
-    def _generate_sql(self, columns: list[str], on_conflict_update: bool) -> str:
-        placeholders = ",".join(["%s"] * len(columns))
+    def _generate_copy_sql(self, columns: list[str]) -> str:
+        fixed_columns = self.fix_columns(columns)
+        sql = f"""
+            COPY {self.temp_table_name} 
+            ({', '.join(fixed_columns)})
+            FROM STDIN WITH CSV;
+            """
+        return sql
+
+    def _generate_insert_sql(self, columns: list[str], on_conflict_update: bool) -> str:
+        fixed_all_columns = self.fix_columns(columns)
+        fixed_all_cols_str = ", ".join(fixed_all_columns)
         rest_columns = self.fix_columns([c for c in columns if c != self.id_column])
         insert_sql = f"""
-            INSERT INTO {self.table_name} ({','.join(self.fix_columns(columns))}) VALUES ({placeholders})
-            ON CONFLICT ({self.id_column}) """
+            INSERT INTO {self.table_name}  ({fixed_all_cols_str})
+            SELECT {fixed_all_cols_str} FROM {self.temp_table_name}
+            ON CONFLICT ("{self.id_column}") """
         if on_conflict_update:
             insert_sql += f"""DO UPDATE
-                SET {', '.join(f'{c}=EXCLUDED.{c}' for c in rest_columns)}
+                SET {', '.join(f'{c}=EXCLUDED.{c}' for c in rest_columns)};
             """
         else:
-            insert_sql += f"""DO NOTHING"""
+            insert_sql += f"""DO NOTHING;"""
         return insert_sql
 
     def execute(
@@ -50,37 +68,62 @@ class DatabaseWriter(Writer):
         inside_transaction: bool = False,
         on_conflict_update: bool = False,
     ) -> bool:
+        print(df.head())
+        print(df.dtypes)
         columns = df.columns.tolist()
         assert self.id_column in columns, f"{self.id_column=} not in {columns=}"
         # TODO: handle NAType
         # psycopg2.ProgrammingError: can't adapt type 'NAType'
-        if "sourceName" in df.columns:
-            df["sourceName"] = df["sourceName"].map(Source.convert)
-        values = (
-            df.astype("object")
-            .replace(np.nan, None)
-            .apply(tuple, axis=1)
-            .values.tolist()
-        )
-        insert_sql = self._generate_sql(columns, on_conflict_update)
-        logging.info(insert_sql)
+        # if "sourceName" in df.columns:
+        #     df["sourceName"] = df["sourceName"].map(Source.convert)
+        # values = (
+        #     df.astype("object")
+        #     .replace(np.nan, None)
+        #     .apply(tuple, axis=1)
+        #     .values.tolist()
+        # )
+        create_temp_table_sql = f"""
+            CREATE TEMP TABLE {self.temp_table_name}
+            (LIKE {self.table_name})
+            ON COMMIT DROP;
+        """
+        copy_sql = self._generate_copy_sql(columns)
+
+        insert_sql = self._generate_insert_sql(columns, on_conflict_update)
+
         conn = self.database.connection()
         start_time = perf_counter()
         try:
             if inside_transaction:
                 with conn.cursor() as cur:
-                    cur.executemany(insert_sql, values)
+                    # cur.executemany(insert_sql, values)
+                    self.print_sql(create_temp_table_sql)
+                    cur.execute(create_temp_table_sql)
+                    self.print_sql(copy_sql)
+                    s = self._pipe_to_io(df)
+                    cur.copy_expert(copy_sql, s)
+                    self.print_sql(insert_sql)
+                    cur.execute(insert_sql)
             else:
                 with conn:
                     with conn.cursor() as cur:
-                        cur.executemany(insert_sql, values)
+                        # cur.executemany(insert_sql, values)
+                        self.print_sql(create_temp_table_sql)
+                        cur.execute(create_temp_table_sql)
+                        self.print_sql(copy_sql)
+                        s = self._pipe_to_io(df)
+                        cur.copy_expert(copy_sql, s)
+                        self.print_sql(insert_sql)
+                        cur.execute(insert_sql)
+                        conn.commit()
             return True
         except Exception as e:
+            logging.error(e.pgerror)
             raise e
         finally:
             end_time = perf_counter()
             logging.info(
-                f"Writing {len(values)} rows to {self.table_name} "
+                f"Writing {len(df)} rows to {self.table_name} "
                 f"took {end_time - start_time:.2f} seconds"
             )
             if inside_transaction:

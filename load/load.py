@@ -8,24 +8,29 @@ class Loader:
         pass
 
     def execute(self, df: pd.DataFrame) -> None:
-        people_df = df[["personId", "person"]].drop_duplicates()
-        people_df.columns = ["id", "name"]
-        DatabaseWriter("people").execute(people_df)
-        archetype_df = df[["archetypeId", "archetypeName"]].drop_duplicates()
-        archetype_df.columns = ["id", "archetype"]
-        DatabaseWriter("archetypes").execute(archetype_df, on_conflict_update=True)
+        df_dict = {}
+        df_dict["people"] = df[["personId", "person"]].drop_duplicates()
+        df_dict["people"].columns = ["id", "name"]
+        df_dict["archetypes"] = df[["archetypeId", "archetypeName"]].drop_duplicates()
+        df_dict["archetypes"].columns = ["id", "archetype"]
+        df_dict["decks"] = df.drop(
+            columns=["maindeck", "sideboard", "person", "archetypeName"]
+        )
+        df_dict["decks"].to_csv("decks.csv")
+        for board in ["maindeck", "sideboard"]:
+            cards_df = df[["id", board]].explode(board).reset_index(drop=True)
+            cards_df.to_csv(f"{board}_info.csv")
+            board_df = pd.DataFrame(cards_df[board].values.tolist())
+            board_df.to_csv(f"{board}_cards.csv")
+            cards_df = pd.concat([cards_df, board_df], axis=1)
+            df_dict[f"{board}s"] = cards_df.drop(columns=board)
+            df_dict[f"{board}s"].columns = ["deckId", "n", "name"]
         common_connection = Database.common_connection()
-        info_df = df.drop(columns=["maindeck", "sideboard", "person", "archetypeName"])
         with common_connection:
-            DatabaseWriter("decks").execute(
-                info_df, on_conflict_update=True, inside_transaction=True
-            )
-            for board in ["maindeck", "sideboard"]:
-                cards_df = df[["id", board]].explode(board)
-                board_df = pd.DataFrame(cards_df[board].values.tolist())
-                cards_df = pd.concat([cards_df, board_df], axis=1)
-                cards_df = cards_df.drop(columns=board)
-                cards_df.columns = ["deckId", "n", "name"]
-                DatabaseWriter(board + "s", "deckId").execute(
-                    cards_df, on_conflict_update=True, inside_transaction=True
+            for table_name, _df in df_dict.items():
+                DatabaseWriter(table_name).execute(
+                    _df,
+                    inside_transaction=True,
+                    on_conflict_update=table_name != "people",
                 )
+            common_connection.commit()
