@@ -18,7 +18,7 @@ class Database:
     @classmethod
     def common_connection(cls):
         if cls._instance is None:
-            cls._instance = super().__new__(cls)
+            cls._instance = cls()
         return cls._instance.connection()
 
     def __init__(self):
@@ -26,7 +26,7 @@ class Database:
         self._connection = None
 
     def connection(self) -> "psycopg2.connection":
-        if self._connection is None:
+        if not hasattr(self, "_connection") or self._connection is None:
             self._connect()
         elif self._connection.closed:
             self._connect()
