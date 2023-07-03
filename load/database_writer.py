@@ -67,6 +67,7 @@ class DatabaseWriter(Writer):
         inside_transaction: bool = False,
         on_conflict_update: bool = False,
     ) -> bool:
+        logging.info(df.shape)
         columns = df.columns.tolist()
         if self.include_id:
             assert "id" in columns, f'"id" not in {columns=}'
@@ -93,8 +94,7 @@ class DatabaseWriter(Writer):
             self.print_sql(insert_sql)
             cursor.execute(insert_sql)
             self.print_sql(drop_temp_table_sql)
-            res = cursor.execute(drop_temp_table_sql)
-            print(res)
+            cursor.execute(drop_temp_table_sql)
             del s
 
         conn = self.database.connection()
