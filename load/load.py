@@ -18,7 +18,9 @@ class Loader:
         print(decks_df)
         df_dict = {}
         for board in ["maindeck", "sideboard"]:
-            cards_df = df[["id", board]].explode(board).reset_index(drop=True)
+            cards_df = df[["id", board]].explode(board)
+            # [] explodes to nan, so have to drop them
+            cards_df = cards_df.dropna(subset=[board]).reset_index(drop=True)
             board_df = pd.DataFrame(cards_df[board].values.tolist())
             cards_df = pd.concat([cards_df, board_df], axis=1)
             df_dict[f"{board}s"] = cards_df.drop(columns=board)
@@ -28,6 +30,9 @@ class Loader:
         deck_ids = decks_df["id"].values.tolist()
         with common_connection:
             with common_connection.cursor() as cursor:
+                # TODO: use copy to to send in deck_ids
+                # since there are too many
+                # psycopg2.OperationalError: SSL SYSCALL error: EOF detected
                 cursor.execute(
                     "SELECT * FROM decks WHERE id IN %(deck_ids)s;",
                     {"deck_ids": tuple(deck_ids)},
