@@ -14,8 +14,10 @@ class Loader:
         archetypes_df.columns = ["id", "archetype"]
         DatabaseWriter("people").execute(people_df)
         DatabaseWriter("archetypes").execute(archetypes_df)
+
         decks_df = df.drop(columns=["maindeck", "sideboard", "person", "archetypeName"])
-        print(decks_df)
+        decks_df.to_csv("decks.csv", index=False)
+
         df_dict = {}
         for board in ["maindeck", "sideboard"]:
             cards_df = df[["id", board]].explode(board)
@@ -25,35 +27,55 @@ class Loader:
             cards_df = pd.concat([cards_df, board_df], axis=1)
             df_dict[f"{board}s"] = cards_df.drop(columns=board)
             df_dict[f"{board}s"].columns = ["deckId", "n", "name"]
-        decks_df.to_csv("decks.csv", index=False)
+
         common_connection = Database.common_connection()
-        deck_ids = decks_df["id"].values.tolist()
         with common_connection:
             with common_connection.cursor() as cursor:
-                # TODO: use copy to to send in deck_ids
-                # since there are too many
-                # psycopg2.OperationalError: SSL SYSCALL error: EOF detected
                 cursor.execute(
-                    "SELECT * FROM decks WHERE id IN %(deck_ids)s;",
-                    {"deck_ids": tuple(deck_ids)},
+                    """
+                    DROP TABLE IF EXISTS temp_deck_ids;
+                    CREATE TABLE temp_deck_ids (id INTEGER PRIMARY KEY);
+                    """
                 )
-                res = cursor.fetchall()
-            print(f"Need to update {len(res)} decks")
-            if res:
+                common_connection.commit()
+            DatabaseWriter("temp_deck_ids").execute(
+                decks_df[["id"]].drop_duplicates(),
+                inside_transaction=True,
+                on_conflict="error",
+            )
+            with common_connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT count(1) FROM decks
+                    WHERE id IN (SELECT id FROM temp_deck_ids);
+                    """
+                )
+                res = cursor.fetchone()
+            if res is None:
+                raise ValueError(f"Failed to load decks")
+            num_rows = res[0]
+            print(f"Need to update {num_rows} decks")
+            if num_rows:
+                # TODO
+                # delete from decks instead and cascade to tables
                 for table_name in ["maindecks", "sideboards"]:
-                    delete_sql = (
-                        f'DELETE FROM {table_name} WHERE "deckId" IN %(deck_ids)s;'
-                    )
+                    delete_sql = f"""
+                        DELETE FROM {table_name} WHERE "deckId" IN
+                        (SELECT id FROM temp_deck_ids);
+                        """
                     with common_connection.cursor() as cursor:
-                        cursor.execute(delete_sql, {"deck_ids": tuple(deck_ids)})
+                        cursor.execute(delete_sql)
                 common_connection.commit()
             DatabaseWriter("decks").execute(
-                decks_df, inside_transaction=True, on_conflict_update=True
+                decks_df, inside_transaction=True, on_conflict="update"
             )
             for table_name in ["maindecks", "sideboards"]:
                 DatabaseWriter(table_name, include_id=False).execute(
                     df_dict[table_name],
                     inside_transaction=True,
-                    on_conflict_update=True,
+                    on_conflict="update",
                 )
+            common_connection.commit()
+            with common_connection.cursor() as cursor:
+                cursor.execute("DROP TABLE IF EXISTS temp_deck_ids;")
             common_connection.commit()

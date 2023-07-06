@@ -2,6 +2,7 @@ import re
 import pandas as pd
 import logging
 import io
+from typing import Literal
 from time import perf_counter
 
 from database import Database
@@ -36,10 +37,10 @@ class DatabaseWriter(Writer):
         s.seek(0)
         return s
 
-    def _generate_copy_sql(self, columns: list[str]) -> str:
+    def _generate_copy_sql(self, columns: list[str], table: str) -> str:
         fixed_columns = self.fix_columns(columns)
         sql = f"""
-            COPY {self.temp_table_name} 
+            COPY {table} 
             ({', '.join(fixed_columns)})
             FROM STDIN WITH CSV;
             """
@@ -67,7 +68,7 @@ class DatabaseWriter(Writer):
         df: pd.DataFrame,
         *,
         inside_transaction: bool = False,
-        on_conflict_update: bool = False,
+        on_conflict: Literal["error", "ignore", "update"] = "ignore",
     ) -> bool:
         logging.info(df.shape)
         columns = df.columns.tolist()
@@ -80,18 +81,23 @@ class DatabaseWriter(Writer):
             CREATE TEMP TABLE {self.temp_table_name}
             (LIKE {self.table_name});
         """
-        copy_sql = self._generate_copy_sql(columns)
 
-        insert_sql = self._generate_insert_sql(columns, on_conflict_update)
+        table = self.table_name if on_conflict == "error" else self.temp_table_name
+        copy_sql = self._generate_copy_sql(columns, table)
+
+        insert_sql = self._generate_insert_sql(columns, on_conflict == "update")
 
         def main_logic(cursor):
             # default executemany is just running loop under the hood
             # so very slow
-            self.print_sql(create_temp_table_sql)
-            cursor.execute(create_temp_table_sql)
-            self.print_sql(copy_sql)
+            if on_conflict != "error":
+                self.print_sql(create_temp_table_sql)
+                cursor.execute(create_temp_table_sql)
+                self.print_sql(copy_sql)
             s = self._pipe_to_io(df)
             cursor.copy_expert(copy_sql, s)
+            if on_conflict == "error":
+                return
             check_sql = f"""SELECT count(1) FROM {self.temp_table_name};"""
             self.print_sql(check_sql)
             cursor.execute(check_sql)
