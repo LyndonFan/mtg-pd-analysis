@@ -23,31 +23,28 @@ class Loader:
             cards_df = pd.concat([cards_df, board_df], axis=1)
             df_dict[f"{board}s"] = cards_df.drop(columns=board)
             df_dict[f"{board}s"].columns = ["deckId", "n", "name"]
+        decks_df.to_csv("decks.csv", index=False)
         common_connection = Database.common_connection()
         deck_ids = decks_df["id"].values.tolist()
-        decks_df.to_csv("decks.csv", index=False)
-        with common_connection:
-            # drop_existing_sql = 'DELETE FROM {} WHERE "deckId" IN %(deck_ids)s;'
-            # with common_connection.cursor() as cursor:
-            #     for table_name in ["maindecks", "sideboards"]:
-            #         _sql = drop_existing_sql.format(table_name)
-            #         DatabaseWriter.print_sql(_sql)
-            #         cursor.execute(_sql, {"deck_ids": tuple(deck_ids)})
-            DatabaseWriter("decks").execute(
-                decks_df, inside_transaction=True, on_conflict_update=True
-            )
-            common_connection.commit()
         with common_connection:
             with common_connection.cursor() as cursor:
-                res = cursor.execute(
+                cursor.execute(
                     "SELECT * FROM decks WHERE id IN %(deck_ids)s;",
                     {"deck_ids": tuple(deck_ids)},
                 )
-                print(list(res) if res else [])
-                if not res:
-                    raise ValueError
-            common_connection.commit()
-        with common_connection:
+                res = cursor.fetchall()
+            print(f"Need to update {len(res)} decks")
+            if res:
+                for table_name in ["maindecks", "sideboards"]:
+                    delete_sql = (
+                        f'DELETE FROM {table_name} WHERE "deckId" IN %(deck_ids)s;'
+                    )
+                    with common_connection.cursor() as cursor:
+                        cursor.execute(delete_sql, {"deck_ids": tuple(deck_ids)})
+                common_connection.commit()
+            DatabaseWriter("decks").execute(
+                decks_df, inside_transaction=True, on_conflict_update=True
+            )
             for table_name in ["maindecks", "sideboards"]:
                 DatabaseWriter(table_name, include_id=False).execute(
                     df_dict[table_name],

@@ -27,7 +27,8 @@ class DatabaseWriter(Writer):
 
     @staticmethod
     def print_sql(sql: str) -> None:
-        logging.info(sql.replace("\t", " ".strip()))
+        lines = sql.strip().split("\n")
+        logging.info("\n" + "\n".join("\t" + l.strip() for l in lines))
 
     def _pipe_to_io(self, df: pd.DataFrame) -> io.StringIO:
         s = io.StringIO()
@@ -53,11 +54,12 @@ class DatabaseWriter(Writer):
             ON CONFLICT ("id") """
         if on_conflict_update:
             rest_columns = self.fix_columns([c for c in columns if c != "id"])
-            insert_sql += f"""DO UPDATE
-                SET {', '.join(f'{c}=EXCLUDED.{c}' for c in rest_columns)};
-            """
+            lhs = ", ".join(rest_columns)
+            rhs = ", ".join(f"EXCLUDED.{c}" for c in rest_columns)
+            insert_sql += f"DO UPDATE SET ({lhs}) = ({rhs});"
         else:
-            insert_sql += f"""DO NOTHING;"""
+            insert_sql += "DO NOTHING;"
+        # insert_sql += "\nRETURNING id;"
         return insert_sql
 
     def execute(
@@ -74,14 +76,13 @@ class DatabaseWriter(Writer):
 
         # yugabyte db doesn't support ON COMMIT DROP >:(
         create_temp_table_sql = f"""
+            DROP TABLE IF EXISTS {self.temp_table_name};
             CREATE TEMP TABLE {self.temp_table_name}
             (LIKE {self.table_name});
         """
         copy_sql = self._generate_copy_sql(columns)
 
         insert_sql = self._generate_insert_sql(columns, on_conflict_update)
-
-        drop_temp_table_sql = f"""DROP TABLE {self.temp_table_name};"""
 
         def main_logic(cursor):
             # default executemany is just running loop under the hood
@@ -91,11 +92,14 @@ class DatabaseWriter(Writer):
             self.print_sql(copy_sql)
             s = self._pipe_to_io(df)
             cursor.copy_expert(copy_sql, s)
+            check_sql = f"""SELECT count(1) FROM {self.temp_table_name};"""
+            self.print_sql(check_sql)
+            cursor.execute(check_sql)
+            num_copied_rows = cursor.fetchone()[0]
+            if num_copied_rows != len(df):
+                raise ValueError(f"{num_copied_rows=} != {len(df)=}")
             self.print_sql(insert_sql)
             cursor.execute(insert_sql)
-            self.print_sql(drop_temp_table_sql)
-            cursor.execute(drop_temp_table_sql)
-            del s
 
         conn = self.database.connection()
         start_time = perf_counter()
@@ -103,6 +107,7 @@ class DatabaseWriter(Writer):
             if inside_transaction:
                 with conn.cursor() as cur:
                     main_logic(cur)
+                    conn.commit()
             else:
                 with conn:
                     with conn.cursor() as cur:
