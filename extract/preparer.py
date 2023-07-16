@@ -11,6 +11,16 @@ SEASON_URL = "https://pennydreadfulmagic.com/api/seasoncodes"
 with open("headers.json") as f:
     HEADERS = json.load(f)
 
+"""
+since /updated endpoint doesn't work for some reason
+
+only useful option for sortBy is "date",
+and we can do "sortOrder=DESC" as well
+https://github.com/PennyDreadfulMTG/Penny-Dreadful-Tools/blob/ac5746779e1b139edff37f349a75e4f7b4f8a677/decksite/data/query.py#L75
+
+"""
+
+
 @dataclass
 class Preparer:
     seasonId: "int | None"
@@ -41,7 +51,7 @@ class Preparer:
         # first season was Eldritch moon, released on July 22, 2016
         query = """
             SELECT
-            coalesce(max("updatedDatetime"), timestamp '2016-01-01')
+            IFNULL(max("updatedDatetime"), timestamp '2016-01-01')
             FROM decks
             WHERE "seasonId" = %s;
         """
