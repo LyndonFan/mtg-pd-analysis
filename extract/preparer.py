@@ -18,15 +18,19 @@ class Preparer:
         init=False, default_factory=lambda: datetime.fromtimestamp(0)
     )
 
+    @property
+    def since(self) -> int:
+        return int(self.lastUpdated.timestamp())
+
     def __post_init__(self):
         self.db = Database()
     
     def execute(self):
         if self.seasonId is None:
-            self.seasonId = self.get_actual_season()
+            self.seasonId = self.infer_season_id()
         self.lastUpdated = self.get_last_updated()
 
-    def get_actual_season(self) -> int:
+    def infer_season_id(self) -> int:
         logging.info(f"seasonId not provided, checking for total number of seasons...")
         extractor = Extractor(url=SEASON_URL, headers=HEADERS)
         season_codes = extractor.execute()
@@ -34,8 +38,11 @@ class Preparer:
 
 
     def get_last_updated(self) -> datetime:
+        # first season was Eldritch moon, released on July 22, 2016
         query = """
-            SELECT max("updatedDatetime") FROM decks
+            SELECT
+            coalesce(max("updatedDatetime"), timestamp '2016-01-01')
+            FROM decks
             WHERE "seasonId" = %s;
         """
         with self.db.common_connection() as conn:
@@ -43,5 +50,7 @@ class Preparer:
                 cur.execute(query, (self.seasonId,))
                 res = cur.fetchone()
         if res is None:
-            raise ValueError(f"Failed to load decks")
+            logging.warn(f"Unable to find any decks for season {self.seasonId}")
+            logging.warn(f"Will use 0 to search all decks.")
+            return datetime.fromtimestamp(0)
         return res[0]

@@ -3,9 +3,9 @@ import os
 import pandas as pd
 import logging
 
-from extract import Extractor
+from extract import Extractor, Preparer
 from transform import Transformer
-from load import ParquetWriter, Loader
+from load import Loader
 from aggregate import AggregateManager
 from handler import error_wrapper
 
@@ -31,14 +31,12 @@ PARTITION_COLS = ["seasonId", "archetypeId", "archetypeName"]
 def main(seasonId: "int | None" = None, test: bool = False):
     if test:
         logging.getLogger().setLevel(logging.DEBUG)
-    if seasonId is None:
-        logging.info(f"seasonId not provided, checking for total number of seasons...")
-        season_codes_url = URL.replace("decks", "seasoncodes")
-        extractor = Extractor(url=season_codes_url, headers=HEADERS)
-        season_codes = extractor.execute()
-        seasonId = len(season_codes)
-    logging.info(f"Running with {seasonId=}, {test=}")
-    params = {"seasonId": seasonId}
+    prep = Preparer(seasonId=seasonId)
+    prep.execute()
+    seasonId = prep.seasonId
+    sinceAsString = prep.lastUpdated.strftime("%Y%m%d %H:%M:%S")
+    logging.info(f"Running with {seasonId=}, since={sinceAsString}, {test=}")
+    params = {"seasonId": seasonId, "since": prep.since}
     extractor = Extractor(
         url=URL,
         headers=HEADERS,
