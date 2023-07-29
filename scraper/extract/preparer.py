@@ -51,7 +51,7 @@ class Preparer:
         # first season was Eldritch moon, released on July 22, 2016
         query = """
             SELECT
-            IFNULL(max("updatedDatetime"), timestamp '2016-01-01')
+            COALESCE(max("updatedDatetime"), timestamp '2016-01-01')
             FROM decks
             WHERE "seasonId" = %s;
         """
