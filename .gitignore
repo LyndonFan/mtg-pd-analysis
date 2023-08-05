@@ -7,3 +7,6 @@ poetry.lock
 .vscode
 .keys
 *.csv
+terraform*
+.terraform*
+*.zip

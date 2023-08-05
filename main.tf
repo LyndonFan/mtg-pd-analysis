@@ -19,7 +19,7 @@ provider "google" {
 provider "archive" {}
 
 resource "google_storage_bucket" "source_bucket" {
-  name     = "source-bucket"
+  name     = "mtg-pd-source-bucket"
   location = var.region
 }
 
@@ -30,14 +30,14 @@ data "archive_file" "scraper_zip" {
 }
 
 resource "google_storage_bucket_object" "scraper_zip" {
-  name   = "scraper.zip"
+  name   = "scraper${data.archive_file.scraper_zip.output_sha256}.zip"
   bucket = google_storage_bucket.source_bucket.name
-  source = scraper_zip.output_path
+  source = data.archive_file.scraper_zip.output_path
 }
 
-resource "google_cloudfunctions_function" "my_function" {
-  name        = "my-function"
-  description = "My Cloud Function"
+resource "google_cloudfunctions_function" "scraper_cloud_function" {
+  name        = "mtg-pd-api-scraper"
+  description = "Scrapes Penny Dreadful Data"
   runtime     = "python39"
   available_memory_mb = 1024
   source_archive_bucket = google_storage_bucket.source_bucket.name
