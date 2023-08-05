@@ -34,7 +34,7 @@ class Preparer:
 
     def __post_init__(self):
         self.db = Database()
-    
+
     def execute(self):
         if self.seasonId is None:
             self.seasonId = self.infer_season_id()
@@ -45,7 +45,6 @@ class Preparer:
         extractor = Extractor(url=SEASON_URL, headers=HEADERS)
         season_codes = extractor.execute()
         return len(season_codes)
-
 
     def get_last_updated(self) -> datetime:
         # first season was Eldritch moon, released on July 22, 2016
