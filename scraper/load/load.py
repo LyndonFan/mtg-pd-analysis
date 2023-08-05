@@ -1,6 +1,7 @@
 import pandas as pd
 from database.database import Database
 from .database_writer import DatabaseWriter
+import logging
 
 
 class Loader:
@@ -8,6 +9,10 @@ class Loader:
         pass
 
     def execute(self, df: pd.DataFrame) -> None:
+        print(f"Originally have {len(df)} rows")
+        df = self.pre_filter(df)
+        print(f"Filtered to {len(df)} rows")
+
         people_df = df[["personId", "person"]].drop_duplicates()
         people_df.columns = ["id", "name"]
         archetypes_df = df[["archetypeId", "archetypeName"]].drop_duplicates()
@@ -63,6 +68,7 @@ class Loader:
                         DELETE FROM {table_name} WHERE "deckId" IN
                         (SELECT id FROM temp_deck_ids);
                         """
+                    logging.info(delete_sql)
                     with common_connection.cursor() as cursor:
                         cursor.execute(delete_sql)
                 common_connection.commit()
@@ -73,9 +79,28 @@ class Loader:
                 DatabaseWriter(table_name, include_id=False).execute(
                     df_dict[table_name],
                     inside_transaction=True,
-                    on_conflict="update",
+                    on_conflict="error",
                 )
             common_connection.commit()
             with common_connection.cursor() as cursor:
                 cursor.execute("DROP TABLE IF EXISTS temp_deck_ids;")
             common_connection.commit()
+
+    def pre_filter(self, df: pd.DataFrame) -> pd.DataFrame:
+        seasonId = int(df["seasonId"].min())
+        with Database.common_connection() as conn:
+            with conn.cursor() as cur:
+                sql = """
+                SELECT id, "updatedDatetime"
+                from decks
+                where "seasonId" = %s
+                """
+                cur.execute(sql, (seasonId,))
+                res = cur.fetchall()
+        last_updated_df = pd.DataFrame(res, columns=["id", "lastUpdated"])
+        df = df.merge(last_updated_df, on="id", how="left")
+        df = df[
+            (df["lastUpdated"].isna()) | (df["lastUpdated"] < df["updatedDatetime"])
+        ]
+        df = df.drop(columns=["lastUpdated"])
+        return df
