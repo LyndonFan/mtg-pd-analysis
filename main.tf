@@ -35,6 +35,22 @@ resource "google_storage_bucket_object" "scraper_zip" {
   source = data.archive_file.scraper_zip.output_path
 }
 
+resource "google_pubsub_topic" "scraper_topic" {
+  name = "mtg-pd-run-scraper"
+}
+
+resource "google_cloud_scheduler_job" "scraper_daily_job" {
+  name        = "mtg-pd-run-scraper"
+  description = "test job"
+  schedule    = "0 12 * * *"
+  time_zone   = "America/New_York"
+
+  pubsub_target {
+    topic_name = google_pubsub_topic.scraper_topic.id
+    data       = base64encode("{}")
+  }
+}
+
 resource "google_cloudfunctions_function" "scraper_cloud_function" {
   name        = "mtg-pd-api-scraper"
   description = "Scrapes Penny Dreadful Data"
@@ -42,6 +58,10 @@ resource "google_cloudfunctions_function" "scraper_cloud_function" {
   available_memory_mb = 1024
   source_archive_bucket = google_storage_bucket.source_bucket.name
   source_archive_object = google_storage_bucket_object.scraper_zip.name
-  entry_point = "main"
+  entry_point = "entry_point"
   service_account_email = "foo-bar-sa@your-project-id.iam.gserviceaccount.com"
+  event_trigger {
+    event_type = "google.pubsub.topic.publish"
+    resource = google_pubsub_topic.scraper_topic.id
+  }
 }

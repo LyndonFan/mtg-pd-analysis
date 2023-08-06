@@ -1,4 +1,5 @@
 import json
+import base64
 import os
 import pandas as pd
 import logging
@@ -7,6 +8,8 @@ from extract import Extractor, Preparer
 from transform import Transformer
 from load import Loader
 from aggregate import AggregateManager
+
+
 from handler import error_wrapper
 
 # from notifier import Notifier
@@ -76,7 +79,21 @@ def main(seasonId: "int | None" = None, test: bool = False):
 
 
 def entry_point(event, context):
-    main()
+    try:
+        pubsub_message = event["data"]
+    except KeyError:
+        return {"status": "fail", "reason": "unable to find data"}, 500
+    try:
+        message_data = base64.b64decode(pubsub_message).decode("utf-8")
+    except ValueError:
+        return {"status": "fail", "reason": "unable to decode data from base64"}, 500
+    try:
+        message_dict = json.loads(message_data)
+    except json.decoder.JSONDecodeError:
+        return {"status": "fail", "reason": "unable to decode data as json"}, 500
+    seasonId = message_dict.get("seasonId")
+    test = "test" in message_dict and message_dict["test"] is True
+    main(seasonId, test)
 
 
 if __name__ == "__main__":
