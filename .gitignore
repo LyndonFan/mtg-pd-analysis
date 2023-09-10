@@ -10,3 +10,4 @@ poetry.lock
 terraform*
 .terraform*
 *.zip
+*.tfvars
